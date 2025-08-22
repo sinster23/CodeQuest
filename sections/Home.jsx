@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
+import  {useNavigate, useNavigation} from 'react-router-dom';
 
 const CodingNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-
+  
   // Load pixelated font
   useEffect(() => {
     const link = document.createElement('link');
@@ -20,6 +20,7 @@ const CodingNavbar = () => {
       }
     };
   }, []);
+  const navigate= useNavigate();
 
   return (
     <>
@@ -36,7 +37,7 @@ const CodingNavbar = () => {
               {/* Brand Name */}
               <div className="flex flex-col">
                 <h1 className="pixelated-brand leading-tight">
-                  Code<span className="text-green-400">Quest</span>
+                  Code<span className="text-green-400">Seekho</span>
                   <span className="text-green-400 ml-1">™</span>
                 </h1>
                 <p className="pixelated-small text-gray-400 hidden sm:block mt-1">by Fixers</p>
@@ -65,12 +66,16 @@ const CodingNavbar = () => {
           {/* Right side - Action Buttons */}
           <div className="flex items-center space-x-3">
             {/* Login Button - Always visible */}
-            <button className="hidden sm:block px-4 py-2 text-gray-300 hover:text-white transition-colors duration-200 pixelated font-medium">
+            <button 
+            className="hidden sm:block px-4 py-2 text-gray-300 hover:text-white transition-colors duration-200 pixelated font-medium"
+            onClick={() => navigate("/signin")}
+            >
               Login
             </button>
 
             {/* Start Playing Button */}
-            <button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base pixelated relative overflow-hidden group transition-all duration-300 transform hover:scale-105">
+            <button onClick={() => navigate("/games")}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base pixelated relative overflow-hidden group transition-all duration-300 transform hover:scale-105">
               <span className="relative z-10 flex items-center space-x-2">
                 <span>▶</span>
                 <span className="hidden sm:inline">Start playing</span>
@@ -106,7 +111,7 @@ const CodingNavbar = () => {
             
             {/* Mobile Login Button */}
             <div className="pt-4 border-t border-gray-800">
-              <button className="block w-full text-left text-gray-300 hover:text-white transition-colors duration-200 pixelated font-medium py-2">
+              <button className="block w-full text-left text-gray-300 hover:text-white transition-colors duration-200 pixelated font-medium py-2"  onClick={() => navigate("/signin")}>
                 Login
               </button>
             </div>
@@ -323,7 +328,7 @@ const Home = () => {
       
       {/* Hero Section */}
       <h1 className="pixel-font text-3xl md:text-5xl font-bold mb-8 glow-text text-green-400 relative z-10">
-        Welcome to <span className="text-cyan-400 glow-text">CodeQuest</span>
+        Welcome to <span className="text-cyan-400 glow-text">CodeSeekho</span>
       </h1>
       
       <p className="pixel-font text-sm md:text-base max-w-3xl mb-10 text-green-300 leading-relaxed relative z-10">
@@ -331,9 +336,13 @@ const Home = () => {
         earn badges, and climb the leaderboard — all while mastering the basics.
       </p>
       
-      <button className="pixel-button pixel-font text-black px-8 py-4 text-sm md:text-base font-bold shadow-lg relative z-10">
+  
+      <button
+        className="pixel-button pixel-font text-black px-8 py-4 text-sm md:text-base font-bold shadow-lg relative z-10"
+      >
         &gt; START_LEARNING
       </button>
+    
 
       {/* Features Section */}
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full relative z-10">

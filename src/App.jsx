@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "../sections/Home";
 import Signin from "../backend/signin";
+import Login from "../backend/login";
 import Languages from "../sections/Languages"
 import Games from '../pages/Games'      
 import "./App.css";
@@ -15,7 +16,9 @@ function App() {
         </>
         } />
       <Route path="/signin" element={<Signin />} />
+       <Route path="/login" element={<Login />} />
       <Route path="/games" element={<Games />} />
+
    </Routes>
   );
 }

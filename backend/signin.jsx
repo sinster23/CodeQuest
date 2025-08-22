@@ -209,14 +209,14 @@ const PixelatedSignIn = () => {
                 className="block text-xs mb-2"
                 style={{ color: '#00ff88', textShadow: '1px 1px 0px #003322' }}
               >
-                PLAYER ID
+                ENTER YOUR MAIL
               </label>
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 className="w-full p-3 text-xs outline-none transition-all duration-300"
                 style={inputStyles}
               />
@@ -228,7 +228,7 @@ const PixelatedSignIn = () => {
                 className="block text-xs mb-2"
                 style={{ color: '#00ff88', textShadow: '1px 1px 0px #003322' }}
               >
-                ACCESS CODE
+                Enter Password
               </label>
               <input
                 type="password"
@@ -243,16 +243,6 @@ const PixelatedSignIn = () => {
 
             {/* Remember Me & Forgot Password */}
             <div className="flex justify-between items-center mb-5 text-xs">
-              <label className="flex items-center cursor-pointer" style={{ color: '#4ecdc4' }}>
-                <input
-                  type="checkbox"
-                  name="remember"
-                  checked={formData.remember}
-                  onChange={handleInputChange}
-                  className="w-3 h-3 mr-2"
-                />
-                REMEMBER ME
-              </label>
               <button
                 type="button"
                 onClick={() => handleAction('forgot')}

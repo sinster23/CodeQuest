@@ -5,6 +5,7 @@ import Signin from "../backend/signin";
 import Languages from "../sections/Languages";
 import Login from "../backend/login";
 import Games from '../pages/Games';
+import SkillsPathPage from '../pages/SkillPath';
 import ProtectedRoute from '../components/ProtectedRoute';
 import "./App.css";
 
@@ -24,6 +25,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Games />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/skill-paths" 
+        element={
+          <ProtectedRoute>
+            <SkillsPathPage />
           </ProtectedRoute>
         } 
       />

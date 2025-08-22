@@ -17,6 +17,7 @@ import {
   Timer,
   Code
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const GamesPage = () => {
   const [selectedMode, setSelectedMode] = useState(null);
@@ -28,6 +29,8 @@ const GamesPage = () => {
     gamesPlayed: 45,
     currentStoryChapter: 3
   });
+
+  const navigate= useNavigate();
 
   // Load pixelated font
   useEffect(() => {
@@ -290,7 +293,7 @@ const GamesPage = () => {
             color="from-green-700 via-green-800 to-emerald-900"
             stats={gameStats.pointBased}
             difficulty="BEGINNER"
-            onClick={() => setSelectedMode('pointBased')}
+            onClick={()=>navigate('/skill-paths')}
           />
 
           {/* PvP Mode */}
@@ -301,7 +304,6 @@ const GamesPage = () => {
             color="from-red-700 via-red-800 to-rose-900"
             stats={gameStats.pvp}
             difficulty="INTERMEDIATE"
-            onClick={() => setSelectedMode('pvp')}
           />
 
           {/* Story Quest */}
@@ -313,7 +315,6 @@ const GamesPage = () => {
             stats={gameStats.storyQuest}
             difficulty="ADVANCED"
             isLocked={userStats.level < 10}
-            onClick={() => setSelectedMode('storyQuest')}
           />
         </div>
 

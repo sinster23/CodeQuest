@@ -47,36 +47,6 @@ const PixelatedSignIn = () => {
     setTimeout(() => setMessage(''), duration);
   };
 
-  // Handle form submission for sign in
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setIsLoading(true);
-    
-    if (!formData.username || !formData.password) {
-      showMessage('Please enter both Player ID and Access Code!');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      await signInWithEmailAndPassword(auth, formData.username, formData.password);
-      
-      // Simulate loading for demo
-      setTimeout(() => {
-        setIsLoading(false);
-        setSuccess("Sign in successful!");
-        showMessage(`Welcome , ${formData.username}! Entering the game world...`);
-      }, 2000);
-      
-    } catch (err) {
-      setIsLoading(false);
-      setError(err.message);
-      showMessage('Sign in failed. Please check your credentials.');
-    }
-  };
-
   const navigate= useNavigate();
 
   // Handle signup
@@ -301,7 +271,7 @@ const handleSignup = async (e) => {
                 className="block text-xs mb-2"
                 style={{ color: '#00ff88', textShadow: '1px 1px 0px #003322' }}
               >
-                PLAYER ID
+                ENTER YOUR MAIL
               </label>
               <input
                 type="email"
@@ -321,7 +291,7 @@ const handleSignup = async (e) => {
                 className="block text-xs mb-2"
                 style={{ color: '#00ff88', textShadow: '1px 1px 0px #003322' }}
               >
-                ACCESS CODE
+                Enter Password
               </label>
               <input
                 type="password"
@@ -335,32 +305,6 @@ const handleSignup = async (e) => {
               />
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex justify-between items-center mb-5 text-xs">
-              <label className="flex items-center cursor-pointer" style={{ color: '#4ecdc4' }}>
-                <input
-                  type="checkbox"
-                  name="remember"
-                  checked={formData.remember}
-                  onChange={handleInputChange}
-                  className="w-3 h-3 mr-2"
-                />
-                REMEMBER ME
-              </label>
-              <button
-                type="button"
-                onClick={() => handleAction('forgot')}
-                className="bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
-                style={{ 
-                  color: '#ff6b6b',
-                  fontFamily: 'monospace',
-                  fontSize: '10px'
-                }}
-              >
-                FORGOT CODE?
-              </button>
-            </div>
-
             {/* Sign In Button */}
             <button
               onClick={handleSignup}
@@ -368,7 +312,7 @@ const handleSignup = async (e) => {
               className="w-full p-4 text-xs uppercase border-none cursor-pointer transition-all duration-200 hover:opacity-90 mb-6 disabled:opacity-70 disabled:cursor-not-allowed"
               style={primaryButtonStyles}
             >
-              {isLoading ? 'LOADING...' : 'SIGN IN'}
+              {isLoading ? 'LOADING...' : 'CREATE ACCOUNT'}
             </button>
           </form>
 
@@ -393,11 +337,11 @@ const handleSignup = async (e) => {
           {/* Create Account Button */}
           <button
             type="button"
-            onClick={() => handleAction('register')}
+            onClick={() => navigate("/login")}
             className="w-full p-4 text-xs uppercase cursor-pointer transition-all duration-200 hover:opacity-80"
             style={secondaryButtonStyles}
           >
-            CREATE ACCOUNT
+            LOGIN
           </button>
 
           {/* Footer Links */}

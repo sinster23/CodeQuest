@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../src/firebase';
+import { use } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const PixelatedSignIn = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +12,8 @@ const PixelatedSignIn = () => {
   });
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Create stars background
   const createStars = () => {
@@ -41,38 +47,94 @@ const PixelatedSignIn = () => {
     setTimeout(() => setMessage(''), duration);
   };
 
-  // Handle form submission
-  const handleSubmit = async () => {
+  // Handle form submission for sign in
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+    
     if (!formData.username || !formData.password) {
       showMessage('Please enter both Player ID and Access Code!');
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    showMessage('CONNECTING TO SERVERS...');
-    
-    // Simulate loading
-    setTimeout(() => {
+    try {
+      await signInWithEmailAndPassword(auth, formData.username, formData.password);
+      
+      // Simulate loading for demo
+      setTimeout(() => {
+        setIsLoading(false);
+        setSuccess("Sign in successful!");
+        showMessage(`Welcome , ${formData.username}! Entering the game world...`);
+      }, 2000);
+      
+    } catch (err) {
       setIsLoading(false);
-      showMessage(`Welcome back, ${formData.username}! Entering the game world...`);
-    }, 2000);
+      setError(err.message);
+      showMessage('Sign in failed. Please check your credentials.');
+    }
   };
 
-  // Handle social login
-  const handleSocialLogin = (platform) => {
-    showMessage(`${platform} login initiated!`);
+  const navigate= useNavigate();
+
+  // Handle signup
+const handleSignup = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
+    if (!formData.username || !formData.password) {
+      showMessage("Please enter both Player ID and Access Code!");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.username,
+        formData.password
+      );
+
+      setSuccess("Signup successful!");
+      showMessage(`Welcome, ${formData.username}! Entering the game world...`);
+
+      // navigate after a short delay so user can see the message
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/games"); 
+      }, 1500);
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.message);
+      showMessage("Signup failed. Please try again.");
+    }
   };
 
   // Handle other actions
   const handleAction = (action) => {
-    const messages = {
-      'forgot': 'Password reset sent to your email!',
-      'register': 'Registration portal opened!',
-      'privacy': 'Privacy policy opened!',
-      'terms': 'Terms of service opened!',
-      'support': 'Support portal opened!'
-    };
-    showMessage(messages[action]);
+    switch(action) {
+      case 'register':
+        handleSignup();
+        break;
+      case 'forgot':
+        showMessage('Password reset link sent to your email!');
+        break;
+      case 'privacy':
+        showMessage('Opening Privacy Policy...');
+        break;
+      case 'terms':
+        showMessage('Opening Terms of Service...');
+        break;
+      case 'support':
+        showMessage('Opening Support Center...');
+        break;
+      default:
+        break;
+    }
   };
 
   const containerStyles = {
@@ -181,6 +243,36 @@ const PixelatedSignIn = () => {
         </div>
       )}
 
+      {/* Error Message */}
+      {error && (
+        <div 
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 text-xs"
+          style={{
+            backgroundColor: '#ff6b6b',
+            color: '#fff',
+            border: '2px solid #cc0000',
+            fontFamily: 'monospace'
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <div 
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 text-xs"
+          style={{
+            backgroundColor: '#4ecdc4',
+            color: '#0f0f23',
+            border: '2px solid #339999',
+            fontFamily: 'monospace'
+          }}
+        >
+          {success}
+        </div>
+      )}
+
       {/* Left Side - Sign In Modal */}
       <div className="flex-1 flex justify-start items-center pl-8">
         <div className="relative z-20 w-full max-w-md p-10" style={mainContainerStyles}>
@@ -194,7 +286,7 @@ const PixelatedSignIn = () => {
                 textShadow: '2px 2px 0px #003322'
               }}
             >
-              PIXELGAME
+              CODESEEKHO
             </h1>
             <div className="text-xs" style={{ color: '#ff6b6b' }}>
               ENTER THE DIGITAL REALM
@@ -202,7 +294,7 @@ const PixelatedSignIn = () => {
           </div>
 
           {/* Sign In Form */}
-          <div>
+          <form>
             {/* Username Field */}
             <div className="mb-6">
               <label 
@@ -212,13 +304,14 @@ const PixelatedSignIn = () => {
                 PLAYER ID
               </label>
               <input
-                type="text"
+                type="email"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 className="w-full p-3 text-xs outline-none transition-all duration-300"
                 style={inputStyles}
+                required
               />
             </div>
 
@@ -238,6 +331,7 @@ const PixelatedSignIn = () => {
                 placeholder="Enter your password"
                 className="w-full p-3 text-xs outline-none transition-all duration-300"
                 style={inputStyles}
+                required
               />
             </div>
 
@@ -269,58 +363,42 @@ const PixelatedSignIn = () => {
 
             {/* Sign In Button */}
             <button
-              type="button"
-              onClick={handleSubmit}
+              onClick={handleSignup}
               disabled={isLoading}
               className="w-full p-4 text-xs uppercase border-none cursor-pointer transition-all duration-200 hover:opacity-90 mb-6 disabled:opacity-70 disabled:cursor-not-allowed"
               style={primaryButtonStyles}
             >
               {isLoading ? 'LOADING...' : 'SIGN IN'}
             </button>
+          </form>
 
-            {/* Divider */}
-            <div className="text-center my-6 relative">
-              <div className="absolute inset-0 flex items-center">
-                <div 
-                  className="w-full h-0.5" 
-                  style={{
-                    background: 'linear-gradient(90deg, transparent, #4ecdc4, transparent)'
-                  }} 
-                />
-              </div>
-              <span 
-                className="relative px-4 text-xs" 
-                style={{ backgroundColor: '#0f0f23', color: '#4ecdc4' }}
-              >
-                OR
-              </span>
+          {/* Divider */}
+          <div className="text-center my-6 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div 
+                className="w-full h-0.5" 
+                style={{
+                  background: 'linear-gradient(90deg, transparent, #4ecdc4, transparent)'
+                }} 
+              />
             </div>
-
-            {/* Social Login Buttons */}
-            <div className="flex gap-2 mb-4">
-              {['STEAM', 'DISCORD', 'EPIC'].map((platform) => (
-                <button
-                  key={platform}
-                  type="button"
-                  onClick={() => handleSocialLogin(platform)}
-                  className="flex-1 p-3 text-xs cursor-pointer transition-all duration-200 hover:opacity-80 border-none"
-                  style={socialButtonStyles}
-                >
-                  {platform}
-                </button>
-              ))}
-            </div>
-
-            {/* Create Account Button */}
-            <button
-              type="button"
-              onClick={() => handleAction('register')}
-              className="w-full p-4 text-xs uppercase cursor-pointer transition-all duration-200 hover:opacity-80"
-              style={secondaryButtonStyles}
+            <span 
+              className="relative px-4 text-xs" 
+              style={{ backgroundColor: '#0f0f23', color: '#4ecdc4' }}
             >
-              CREATE ACCOUNT
-            </button>
+              OR
+            </span>
           </div>
+
+          {/* Create Account Button */}
+          <button
+            type="button"
+            onClick={() => handleAction('register')}
+            className="w-full p-4 text-xs uppercase cursor-pointer transition-all duration-200 hover:opacity-80"
+            style={secondaryButtonStyles}
+          >
+            CREATE ACCOUNT
+          </button>
 
           {/* Footer Links */}
           <div className="text-center mt-6">

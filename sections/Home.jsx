@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-10 bg-gradient-to-br from-gray-900 via-gray-900 to-black min-h-screen">
+    <div className="flex flex-col items-center justify-center text-center p-10 bg-gradient-to-br from-green-900 via-gray-900 to-black min-h-screen">
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         

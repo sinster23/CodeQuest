@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
 export default function Home() {
+
+ const navigate = useNavigate();
+
   return (
     <div className="flex flex-col items-center justify-center text-center p-10 bg-gradient-to-br from-green-900 via-gray-900 to-black min-h-screen">
       <style jsx>{`
@@ -136,9 +140,14 @@ export default function Home() {
         earn badges, and climb the leaderboard — all while mastering the basics.
       </p>
       
-      <button className="pixel-button pixel-font text-black px-8 py-4 text-sm md:text-base font-bold shadow-lg relative z-10">
+  
+      <button
+        className="pixel-button pixel-font text-black px-8 py-4 text-sm md:text-base font-bold shadow-lg relative z-10"
+        onClick={() => navigate("/signin")}
+      >
         &gt; START_LEARNING
       </button>
+    
 
       {/* Features Section */}
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full relative z-10">

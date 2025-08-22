@@ -1,17 +1,15 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import Home from '../sections/Home'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import Home from "../sections/Home";
+import Signin from "../backend/signin";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <section id="Home">
-      <Home />
-    </section>
-  )
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/signin" element={<Signin />} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;

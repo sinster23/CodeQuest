@@ -360,7 +360,7 @@ await setDoc(doc(db, "users", user.uid), {
                     textShadow: '2px 2px 0px #003322'
                   }}
                 >
-                  CODESEEKHO
+                  CodeSeekho
                 </h1>
                 <div className="text-xs" style={{ color: '#ff6b6b' }}>
                   ENTER THE DIGITAL REALM

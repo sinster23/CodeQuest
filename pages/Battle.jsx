@@ -48,6 +48,13 @@ const CodeBattlesPage = () => {
   const [levelUpNotification, setLevelUpNotification] = useState(false)
   const [previousLevel, setPreviousLevel] = useState(null)
   const [newLevel, setNewLevel] = useState(null)
+  // Add this near the top of your file, after imports
+const API_BASE_URL = 'http://localhost:5000';
+
+// Add these new state variables with your existing ones
+const [questionsLoading, setQuestionsLoading] = useState(false);
+const [questionsError, setQuestionsError] = useState(null);
+const [currentQuestions, setCurrentQuestions] = useState([]);
 
   // Track defeated battles for each language - will be loaded from Firebase
   const [defeatedBattles, setDefeatedBattles] = useState({
@@ -318,652 +325,119 @@ const CodeBattlesPage = () => {
   }
 
   // Hardcoded questions for each language
-  const questions = {
-    javascript: [
-      {
-        question: "What is the correct way to declare a variable in JavaScript?",
-        options: ["var name = 'John';", "variable name = 'John';", "v name = 'John';", "declare name = 'John';"],
-        correct: 0,
-      },
-      {
-        question: "Which method adds an element to the end of an array?",
-        options: ["append()", "push()", "add()", "insert()"],
-        correct: 1,
-      },
-      {
-        question: "What does '===' operator do in JavaScript?",
-        options: ["Assignment", "Loose equality", "Strict equality", "Not equal"],
-        correct: 2,
-      },
-      {
-        question: "How do you create a function in JavaScript?",
-        options: ["function = myFunc() {}", "create myFunc() {}", "function myFunc() {}", "def myFunc() {}"],
-        correct: 2,
-      },
-      {
-        question: "What is the result of typeof null?",
-        options: ["'null'", "'undefined'", "'object'", "'boolean'"],
-        correct: 2,
-      },
-      {
-        question: "Which method removes the last element from an array?",
-        options: ["pop()", "remove()", "delete()", "splice()"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to write a JavaScript array?",
-        options: [
-          "var colors = 'red', 'green', 'blue'",
-          "var colors = (1:'red', 2:'green', 3:'blue')",
-          "var colors = ['red', 'green', 'blue']",
-          "var colors = 1 = ('red'), 2 = ('green'), 3 = ('blue')",
-        ],
-        correct: 2,
-      },
-      {
-        question: "How do you write 'Hello World' in an alert box?",
-        options: ["alertBox('Hello World');", "msg('Hello World');", "alert('Hello World');", "msgBox('Hello World');"],
-        correct: 2,
-      },
-      {
-        question: "How do you create a function that returns a value?",
-        options: [
-          "function myFunction() { return 'Hello'; }",
-          "function myFunction() { yield 'Hello'; }",
-          "function myFunction() { give 'Hello'; }",
-          "function myFunction() { output 'Hello'; }",
-        ],
-        correct: 0,
-      },
-      {
-        question: "How do you call a function named 'myFunction'?",
-        options: ["call myFunction()", "myFunction()", "call function myFunction()", "Call.myFunction()"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct way to write a JavaScript object?",
-        options: [
-          "var person = {firstName:'John', lastName:'Doe'};",
-          "var person = {firstName='John', lastName='Doe'};",
-          "var person = (firstName:'John', lastName:'Doe');",
-          "var person = (firstName:'John', lastName='Doe');",
-        ],
-        correct: 0,
-      },
-      {
-        question: "Which event occurs when the user clicks on an HTML element?",
-        options: ["onchange", "onclick", "onmouseclick", "onmouseover"],
-        correct: 1,
-      },
-      {
-        question: "How do you declare a JavaScript variable?",
-        options: ["variable carName;", "v carName;", "var carName;", "declare carName;"],
-        correct: 2,
-      },
-      {
-        question: "Which operator is used to assign a value to a variable?",
-        options: ["*", "=", "x", "-"],
-        correct: 1,
-      },
-      {
-        question: "What will the following code return: Boolean(10 > 9)",
-        options: ["true", "false", "NaN", "undefined"],
-        correct: 0,
-      },
-      {
-        question: "Is JavaScript case-sensitive?",
-        options: ["No", "Yes", "Sometimes", "Only for variables"],
-        correct: 1,
-      },
-      {
-        question: "Which method converts JSON data to a JavaScript object?",
-        options: ["JSON.parse()", "JSON.stringify()", "JSON.convert()", "JSON.object()"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to write a JavaScript comment?",
-        options: ["<!-- This is a comment -->", "// This is a comment", "' This is a comment", "* This is a comment *"],
-        correct: 1,
-      },
-      {
-        question: "Which method is used to find the length of a string?",
-        options: ["length()", "size()", "len()", "length"],
-        correct: 3,
-      },
-      {
-        question: "What does the 'this' keyword refer to?",
-        options: ["The current function", "The current object", "The global object", "The parent object"],
-        correct: 1,
-      },
-    ],
-    python: [
-      {
-        question: "How do you create a list in Python?",
-        options: ["list = []", "list = {}", "list = ()", "list = <>"],
-        correct: 0,
-      },
-      {
-        question: "Which keyword is used to create a function in Python?",
-        options: ["function", "def", "create", "func"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct way to import a module?",
-        options: ["include math", "import math", "use math", "require math"],
-        correct: 1,
-      },
-      {
-        question: "How do you create a dictionary in Python?",
-        options: ["dict = []", "dict = ()", "dict = {}", "dict = <>"],
-        correct: 2,
-      },
-      {
-        question: "Which method is used to add an item to a list?",
-        options: ["add()", "push()", "append()", "insert()"],
-        correct: 2,
-      },
-      {
-        question: "What is the correct file extension for Python files?",
-        options: [".pyth", ".pt", ".py", ".python"],
-        correct: 2,
-      },
-      {
-        question: "Which keyword is used for loops in Python?",
-        options: ["loop", "for", "repeat", "iterate"],
-        correct: 1,
-      },
-      {
-        question: "How do you insert comments in Python code?",
-        options: [
-          "// This is a comment",
-          "/* This is a comment */",
-          "# This is a comment",
-          "<!-- This is a comment -->",
-        ],
-        correct: 2,
-      },
-      {
-        question: "Which of the following is a correct variable name?",
-        options: ["2myvar", "my-var", "my_var", "my var"],
-        correct: 2,
-      },
-      {
-        question: "What is the output of print(2**3)?",
-        options: ["6", "8", "9", "23"],
-        correct: 1,
-      },
-      {
-        question: "Which method removes an item from a list?",
-        options: ["delete()", "remove()", "discard()", "pop()"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct way to create a string in Python?",
-        options: ["'Hello World'", '"Hello World"', "Both A and B", "string('Hello World')"],
-        correct: 2,
-      },
-      {
-        question: "Which operator is used for floor division?",
-        options: ["/", "//", "%", "**"],
-        correct: 1,
-      },
-      {
-        question: "How do you check the data type of a variable?",
-        options: ["typeof()", "type()", "datatype()", "check()"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct way to handle exceptions?",
-        options: ["try/catch", "try/except", "catch/finally", "handle/error"],
-        correct: 1,
-      },
-      {
-        question: "Which keyword is used to create a class?",
-        options: ["class", "Class", "define", "create"],
-        correct: 0,
-      },
-      {
-        question: "How do you get user input in Python?",
-        options: ["input()", "get()", "read()", "scan()"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to open a file?",
-        options: [
-          "file = open('filename.txt')",
-          "file = read('filename.txt')",
-          "file = load('filename.txt')",
-          "file = get('filename.txt')",
-        ],
-        correct: 0,
-      },
-      {
-        question: "Which method converts a string to lowercase?",
-        options: ["lower()", "lowercase()", "toLower()", "downcase()"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to create a tuple?",
-        options: ["tuple = []", "tuple = {}", "tuple = ()", "tuple = <>"],
-        correct: 2,
-      },
-    ],
-    typescript: [
-      {
-        question: "How do you specify a type for a variable?",
-        options: ["let name: string;", "let name as string;", "let name = string;", "let string name;"],
-        correct: 0,
-      },
-      {
-        question: "What keyword is used to define an interface?",
-        options: ["type", "interface", "class", "struct"],
-        correct: 1,
-      },
-      {
-        question: "How do you make a property optional in an interface?",
-        options: ["name: string?", "name?: string", "optional name: string", "name: optional string"],
-        correct: 1,
-      },
-      {
-        question: "What is a generic in TypeScript?",
-        options: ["A type variable", "A class method", "An interface", "A module"],
-        correct: 0,
-      },
-      {
-        question: "How do you define a union type?",
-        options: ["string & number", "string + number", "string | number", "string || number"],
-        correct: 2,
-      },
-      {
-        question: "What is the correct way to define an array type?",
-        options: ["Array<string>", "string[]", "Both A and B", "array<string>"],
-        correct: 2,
-      },
-      {
-        question: "How do you define a function type?",
-        options: [
-          "(x: number) => string",
-          "function(x: number): string",
-          "func(x: number) -> string",
-          "def(x: number): string",
-        ],
-        correct: 0,
-      },
-      {
-        question: "What keyword is used to extend an interface?",
-        options: ["extends", "implements", "inherits", "derives"],
-        correct: 0,
-      },
-      {
-        question: "How do you define a readonly property?",
-        options: ["readonly name: string", "const name: string", "final name: string", "immutable name: string"],
-        correct: 0,
-      },
-      {
-        question: "What is the 'never' type used for?",
-        options: [
-          "Functions that never return",
-          "Variables that are never used",
-          "Types that are never defined",
-          "Classes that are never instantiated",
-        ],
-        correct: 0,
-      },
-      {
-        question: "How do you create a type alias?",
-        options: ["type Name = string", "alias Name = string", "typedef Name = string", "define Name = string"],
-        correct: 0,
-      },
-      {
-        question: "What is the difference between 'any' and 'unknown'?",
-        options: ["No difference", "unknown is type-safe", "any is type-safe", "unknown allows any operation"],
-        correct: 1,
-      },
-      {
-        question: "How do you define an enum?",
-        options: [
-          "enum Color { Red, Green, Blue }",
-          "const Color = { Red, Green, Blue }",
-          "type Color = Red | Green | Blue",
-          "define Color { Red, Green, Blue }",
-        ],
-        correct: 0,
-      },
-      {
-        question: "What is a mapped type?",
-        options: ["A type that maps over properties", "A type for Map objects", "A geographic type", "A routing type"],
-        correct: 0,
-      },
-      {
-        question: "How do you make all properties optional?",
-        options: ["Partial<T>", "Optional<T>", "Maybe<T>", "Nullable<T>"],
-        correct: 0,
-      },
-      {
-        question: "What is the 'keyof' operator used for?",
-        options: ["Getting keys of an object type", "Creating new keys", "Deleting keys", "Checking if key exists"],
-        correct: 0,
-      },
-      {
-        question: "How do you define a conditional type?",
-        options: ["T extends U ? X : Y", "if T extends U then X else Y", "T instanceof U ? X : Y", "T is U ? X : Y"],
-        correct: 0,
-      },
-      {
-        question: "What is the purpose of 'declare'?",
-        options: ["Ambient declarations", "Variable declarations", "Function declarations", "Class declarations"],
-        correct: 0,
-      },
-      {
-        question: "How do you import types only?",
-        options: [
-          "import type { Type } from 'module'",
-          "import { Type } from 'module' as type",
-          "import types { Type } from 'module'",
-          "import { type Type } from 'module'",
-        ],
-        correct: 0,
-      },
-      {
-        question: "What is a discriminated union?",
-        options: [
-          "A union with a common property",
-          "A union of different types",
-          "A union with discrimination",
-          "A union of classes",
-        ],
-        correct: 0,
-      },
-    ],
-    cpp: [
-      {
-        question: "How do you declare a pointer in C++?",
-        options: ["int* ptr;", "int ptr*;", "pointer int ptr;", "int &ptr;"],
-        correct: 0,
-      },
-      {
-        question: "Which header includes cout?",
-        options: ["<stdio.h>", "<iostream>", "<cstdio>", "<console>"],
-        correct: 1,
-      },
-      {
-        question: "What is the scope resolution operator?",
-        options: ["::", "->", ".", "::>"],
-        correct: 0,
-      },
-      {
-        question: "How do you dynamically allocate memory?",
-        options: ["malloc()", "new", "alloc()", "create()"],
-        correct: 1,
-      },
-      {
-        question: "What is a destructor called?",
-        options: ["~ClassName()", "delete ClassName()", "ClassName~()", "destroy()"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to include a header file?",
-        options: ["#include <header.h>", "#import <header.h>", "#using <header.h>", "#require <header.h>"],
-        correct: 0,
-      },
-      {
-        question: "Which access specifier makes members accessible only within the class?",
-        options: ["public", "private", "protected", "internal"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct syntax for a constructor?",
-        options: ["ClassName() {}", "constructor ClassName() {}", "new ClassName() {}", "create ClassName() {}"],
-        correct: 0,
-      },
-      {
-        question: "How do you declare a reference in C++?",
-        options: ["int& ref = var;", "int ref& = var;", "reference int ref = var;", "int* ref = &var;"],
-        correct: 0,
-      },
-      {
-        question: "What keyword is used for inheritance?",
-        options: ["extends", "inherits", ":", "derives"],
-        correct: 2,
-      },
-      {
-        question: "Which operator is used to access members through a pointer?",
-        options: [".", "->", "::", "&"],
-        correct: 1,
-      },
-      {
-        question: "What is the size of int typically?",
-        options: ["2 bytes", "4 bytes", "8 bytes", "Depends on system"],
-        correct: 3,
-      },
-      {
-        question: "How do you declare a constant?",
-        options: ["const int x = 5;", "constant int x = 5;", "final int x = 5;", "readonly int x = 5;"],
-        correct: 0,
-      },
-      {
-        question: "What is function overloading?",
-        options: [
-          "Same function name, different parameters",
-          "Different function names",
-          "Virtual functions",
-          "Template functions",
-        ],
-        correct: 0,
-      },
-      {
-        question: "Which keyword is used for templates?",
-        options: ["template", "generic", "typename", "class"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to declare an array?",
-        options: ["int arr[10];", "array<int> arr[10];", "int[] arr = new int[10];", "vector<int> arr(10);"],
-        correct: 0,
-      },
-      {
-        question: "How do you free dynamically allocated memory?",
-        options: ["free()", "delete", "remove()", "clear()"],
-        correct: 1,
-      },
-      {
-        question: "What is a virtual function?",
-        options: [
-          "A function that can be overridden",
-          "A function that doesn't exist",
-          "A template function",
-          "A static function",
-        ],
-        correct: 0,
-      },
-      {
-        question: "Which header is needed for string class?",
-        options: ["<string>", "<cstring>", "<str>", "<text>"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to use namespace std?",
-        options: ["using namespace std;", "use std;", "import std;", "include std;"],
-        correct: 0,
-      },
-    ],
-    java: [
-      {
-        question: "Which keyword is used to create a class?",
-        options: ["class", "Class", "create", "new"],
-        correct: 0,
-      },
-      {
-        question: "How do you create an object?",
-        options: ["Object obj = Object();", "new Object obj;", "Object obj = new Object();", "create Object obj;"],
-        correct: 2,
-      },
-      {
-        question: "What is method overloading?",
-        options: [
-          "Same method, different parameters",
-          "Different method, same parameters",
-          "Inheriting methods",
-          "Abstract methods",
-        ],
-        correct: 0,
-      },
-      {
-        question: "Which access modifier is most restrictive?",
-        options: ["public", "protected", "private", "default"],
-        correct: 2,
-      },
-      {
-        question: "What is the main method signature?",
-        options: [
-          "public static void main(String args[])",
-          "public void main(String args[])",
-          "static void main(String args[])",
-          "void main(String args[])",
-        ],
-        correct: 0,
-      },
-      {
-        question: "Which keyword is used for inheritance?",
-        options: ["extends", "inherits", "implements", "derives"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to declare an array?",
-        options: [
-          "int[] arr = new int[10];",
-          "int arr[] = new int[10];",
-          "Both A and B",
-          "array<int> arr = new array<int>[10];",
-        ],
-        correct: 2,
-      },
-      {
-        question: "Which keyword is used to prevent inheritance?",
-        options: ["final", "static", "private", "sealed"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to handle exceptions?",
-        options: ["try/catch", "try/except", "handle/error", "catch/finally"],
-        correct: 0,
-      },
-      {
-        question: "Which collection allows duplicate elements?",
-        options: ["Set", "List", "Map", "Queue"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct way to create a string?",
-        options: [
-          "String str = 'Hello';",
-          'String str = "Hello";',
-          'string str = "Hello";',
-          "String str = new String('Hello');",
-        ],
-        correct: 1,
-      },
-      {
-        question: "Which keyword is used to implement an interface?",
-        options: ["extends", "implements", "uses", "applies"],
-        correct: 1,
-      },
-      {
-        question: "What is the wrapper class for int?",
-        options: ["Int", "Integer", "Number", "Numeric"],
-        correct: 1,
-      },
-      {
-        question: "Which method is used to compare strings?",
-        options: ["compare()", "equals()", "==", "is()"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct way to create a thread?",
-        options: ["extends Thread", "implements Runnable", "Both A and B", "new Thread()"],
-        correct: 2,
-      },
-      {
-        question: "Which keyword is used for constants?",
-        options: ["const", "final", "static", "readonly"],
-        correct: 1,
-      },
-      {
-        question: "What is the correct way to import a package?",
-        options: ["import java.util.*;", "include java.util.*;", "using java.util.*;", "require java.util.*;"],
-        correct: 0,
-      },
-      {
-        question: "Which method is called when an object is created?",
-        options: ["constructor", "init()", "create()", "new()"],
-        correct: 0,
-      },
-      {
-        question: "What is the correct way to create a generic class?",
-        options: ["class MyClass<T>", "class MyClass(T)", "class MyClass[T]", "generic class MyClass<T>"],
-        correct: 0,
-      },
-      {
-        question: "Which keyword is used to call parent class methods?",
-        options: ["parent", "super", "base", "this"],
-        correct: 1,
-      },
-    ],
+// Remove the large hardcoded questions object and replace with this function
+const fetchQuestionsForBattle = async (language, difficulty, battleName) => {
+  setQuestionsLoading(true);
+  setQuestionsError(null);
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/generate-questions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        language,
+        difficulty,
+        battleName,
+        count: 20 // Generate 20 questions for variety
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.success || !data.questions || data.questions.length === 0) {
+      throw new Error('No valid questions received');
+    }
+
+    setCurrentQuestions(data.questions);
+    return data.questions;
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    setQuestionsError(error.message);
+    // Fallback to a basic question if API fails
+    setCurrentQuestions([{
+      question: "This battle requires an internet connection. Please check your connection and try again.",
+      options: ["Retry", "Go Back", "Check Connection", "Exit"],
+      correct: 0
+    }]);
+    return null;
+  } finally {
+    setQuestionsLoading(false);
   }
+};
 
-  const startBattle = (battle) => {
-    setCurrentBattle(battle)
-    setBattlePhase("battle")
-    setPlayerHealth(10)
-    setOpponentHealth(10)
-    setCurrentQuestion(0)
-    setSelectedAnswer(null)
-    setBattleResult(null)
-    setTimeLeft(30)
-    setScore({ player: 0, opponent: 0 })
-    setLevelUpNotification(false) // Add this line
-    setNewLevel(null) // Add this line
+const startBattle = async (battle) => {
+  setCurrentBattle(battle);
+  setQuestionsLoading(true);
+  setBattlePhase("loading"); // Add loading phase
+  
+  // Fetch questions from API
+  const questions = await fetchQuestionsForBattle(
+    selectedLanguage, 
+    battle.difficulty, 
+    battle.name
+  );
+  
+  if (questions && questions.length > 0) {
+    setBattlePhase("battle");
+    setPlayerHealth(10);
+    setOpponentHealth(10);
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setBattleResult(null);
+    setTimeLeft(30);
+    setScore({ player: 0, opponent: 0 });
+    setLevelUpNotification(false);
+    setNewLevel(null);
+  } else {
+    // Handle error - show error message
+    setBattlePhase("error");
   }
+};
 
-  const handleAnswer = (answerIndex) => {
-    setSelectedAnswer(answerIndex)
-    const isCorrect = answerIndex === questions[selectedLanguage][currentQuestion].correct
+const handleAnswer = (answerIndex) => {
+  setSelectedAnswer(answerIndex);
+  const isCorrect = answerIndex === currentQuestions[currentQuestion].correct; // Changed from questions[selectedLanguage]
 
-    setTimeout(() => {
-      if (isCorrect) {
-        setOpponentHealth((prev) => Math.max(0, prev - 1))
-        setScore((prev) => ({ ...prev, player: prev.player + 1 }))
-      } else {
-        setPlayerHealth((prev) => Math.max(0, prev - 1))
-        setScore((prev) => ({ ...prev, opponent: prev.opponent + 1 }))
-      }
+  setTimeout(() => {
+    if (isCorrect) {
+      setOpponentHealth((prev) => Math.max(0, prev - 1));
+      setScore((prev) => ({ ...prev, player: prev.player + 1 }));
+    } else {
+      setPlayerHealth((prev) => Math.max(0, prev - 1));
+      setScore((prev) => ({ ...prev, opponent: prev.opponent + 1 }));
+    }
 
-      // Check for battle end
-      const newPlayerHealth = isCorrect ? playerHealth : Math.max(0, playerHealth - 1)
-      const newOpponentHealth = isCorrect ? Math.max(0, opponentHealth - 1) : opponentHealth
+    // Check for battle end
+    const newPlayerHealth = isCorrect ? playerHealth : Math.max(0, playerHealth - 1);
+    const newOpponentHealth = isCorrect ? Math.max(0, opponentHealth - 1) : opponentHealth;
 
-      if (newPlayerHealth <= 0) {
-        setBattleResult("defeat")
-        setBattlePhase("result")
-      } else if (newOpponentHealth <= 0) {
-        setBattleResult("victory")
-        setBattlePhase("result")
-        // Save victory to Firebase and unlock next battle
-        saveBattleVictory(currentBattle.id)
-        setDefeatedBattles((prev) => ({
-          ...prev,
-          [selectedLanguage]: [...prev[selectedLanguage], currentBattle.id + 1].filter(
-            (id, index, arr) => arr.indexOf(id) === index && id <= 5,
-          ),
-        }))
-      } else {
-        // Next question
-        setCurrentQuestion((prev) => (prev + 1) % questions[selectedLanguage].length)
-        setSelectedAnswer(null)
-        setTimeLeft(30)
-      }
-    }, 1000)
-  }
+    if (newPlayerHealth <= 0) {
+      setBattleResult("defeat");
+      setBattlePhase("result");
+    } else if (newOpponentHealth <= 0) {
+      setBattleResult("victory");
+      setBattlePhase("result");
+      saveBattleVictory(currentBattle.id);
+      setDefeatedBattles((prev) => ({
+        ...prev,
+        [selectedLanguage]: [...prev[selectedLanguage], currentBattle.id + 1].filter(
+          (id, index, arr) => arr.indexOf(id) === index && id <= 5,
+        ),
+      }));
+    } else {
+      // Next question
+      setCurrentQuestion((prev) => (prev + 1) % currentQuestions.length); // Changed reference
+      setSelectedAnswer(null);
+      setTimeLeft(30);
+    }
+  }, 1000);
+};
 
   const handleTimeUp = () => {
     // Time up counts as wrong answer
@@ -1202,11 +676,11 @@ const CodeBattlesPage = () => {
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 border-4 border-green-400 question-glow mb-8">
             <div className="pixel-font text-sm text-green-400 mb-4">QUESTION {currentQuestion + 1}/∞</div>
             <h2 className="pixel-font text-lg text-white leading-relaxed mb-6">
-              {questions[selectedLanguage][currentQuestion].question}
+              {currentQuestions[currentQuestion]?.question}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {questions[selectedLanguage][currentQuestion].options.map((option, index) => (
+              {currentQuestions[currentQuestion]?.options.map((option, index) => (
                 <button
                   key={index}
                   onClick={() => handleAnswer(index)}
@@ -1215,10 +689,10 @@ const CodeBattlesPage = () => {
                     selectedAnswer === null
                       ? "border-gray-600 bg-gray-800 hover:border-white hover:bg-gray-700"
                       : selectedAnswer === index
-                        ? index === questions[selectedLanguage][currentQuestion].correct
+                        ? index === currentQuestions[currentQuestion]?.correct
                           ? "border-green-400 bg-green-900/50 text-green-400"
                           : "border-red-400 bg-red-900/50 text-red-400"
-                        : index === questions[selectedLanguage][currentQuestion].correct && selectedAnswer !== null
+                        : index === currentQuestions[currentQuestion]?.correct && selectedAnswer !== null
                           ? "border-green-400 bg-green-900/30 text-green-300"
                           : "border-gray-600 bg-gray-800 text-gray-400"
                   }`}
@@ -1328,6 +802,39 @@ const CodeBattlesPage = () => {
       </div>
     )
   }
+  // Add loading phase
+if (battlePhase === "loading") {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-gray-900 to-black text-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-400 mb-8"></div>
+        <div className="pixel-font text-xl text-red-400 mb-4">GENERATING BATTLE QUESTIONS</div>
+        <div className="pixel-font text-sm text-gray-400">Using AI to create {currentBattle?.difficulty} level questions...</div>
+      </div>
+    </div>
+  );
+}
+
+// Add error phase
+if (battlePhase === "error") {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-gray-900 to-black text-white flex items-center justify-center">
+      <div className="text-center max-w-md">
+        <div className="text-red-400 text-6xl mb-4">⚠️</div>
+        <div className="pixel-font text-2xl text-red-400 mb-4">BATTLE UNAVAILABLE</div>
+        <div className="pixel-font text-sm text-gray-300 mb-6">
+          {questionsError || "Unable to generate questions. Please check your internet connection."}
+        </div>
+        <button
+          onClick={resetBattle}
+          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3 pixel-font text-sm font-bold transition-all duration-300"
+        >
+          ← BACK TO BATTLES
+        </button>
+      </div>
+    </div>
+  );
+}
 
   // Main selection screen
   return (

@@ -304,6 +304,7 @@ const GamesPage = () => {
             color="from-red-700 via-red-800 to-rose-900"
             stats={gameStats.pvp}
             difficulty="INTERMEDIATE"
+            onClick={() => navigate('/battles')}
           />
 
           {/* Story Quest */}

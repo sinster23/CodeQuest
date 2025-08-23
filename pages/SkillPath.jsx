@@ -18,8 +18,13 @@ import {
   Globe,
   Palette,
   Shield,
-  Gamepad2
+  Gamepad2,
+  X,
+  Clock,
+  Award
 } from 'lucide-react';
+import ChallengePage from '../pages/ChallengePage';
+
 
 const SkillsPathPage = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
@@ -32,6 +37,32 @@ const SkillsPathPage = () => {
     algorithms: { completedNodes: ['algo-basics-1'], currentXP: 200 },
     databases: { completedNodes: [], currentXP: 0 }
   });
+  const [showChallengePage, setShowChallengePage] = useState(false);
+  const [selectedChallengeNode, setSelectedChallengeNode] = useState(null);
+
+  // When user clicks "START CHALLENGES"
+  const startChallenges = (node) => {
+    setSelectedChallengeNode(node);
+    setShowChallengePage(true);
+    setSelectedNode(null); // Close the node details modal
+  };
+
+  // Handle completion
+  const handleChallengeComplete = (nodeId) => {
+    // Update user progress
+    const newCompleted = [...userProgress[selectedLanguage].completedNodes, nodeId];
+    setUserProgress(prev => ({
+      ...prev,
+      [selectedLanguage]: {
+        ...prev[selectedLanguage],
+        completedNodes: newCompleted,
+        currentXP: prev[selectedLanguage].currentXP + selectedChallengeNode.xp
+      }
+    }));
+    
+    setShowChallengePage(false);
+    setSelectedChallengeNode(null);
+  };
 
   // Load pixelated font
   useEffect(() => {
@@ -264,6 +295,21 @@ const SkillsPathPage = () => {
     );
   };
 
+  // If showing challenge page, render it instead of the main interface
+  if (showChallengePage && selectedChallengeNode) {
+    return (
+      <ChallengePage
+        node={selectedChallengeNode}
+        language={selectedLanguage}
+        onComplete={handleChallengeComplete}
+        onBack={() => {
+          setShowChallengePage(false);
+          setSelectedChallengeNode(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white relative overflow-hidden">
       {/* Custom Styles */}
@@ -456,7 +502,7 @@ const SkillsPathPage = () => {
                     onClick={() => setSelectedNode(null)}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
-                    ×
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
                 
@@ -525,7 +571,10 @@ const SkillsPathPage = () => {
                           <div className="text-center">
                             <Play className="w-8 h-8 text-blue-400 mx-auto mb-2" />
                             <div className="pixel-font text-xs text-blue-400 mb-2">READY TO START</div>
-                            <button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 pixel-font text-xs font-bold transform hover:scale-105 transition-all duration-300">
+                            <button 
+                              onClick={() => startChallenges(selectedNode)}
+                              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 pixel-font text-xs font-bold transform hover:scale-105 transition-all duration-300"
+                            >
                               START CHALLENGES
                             </button>
                           </div>
@@ -644,64 +693,6 @@ const SkillsPathPage = () => {
             </div>
           </div>
         </div>
-
-        {/* Challenge Modal Preview (when a node is selected and available) */}
-        {selectedNode && getNodeStatus(selectedNode.id).available && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="retro-card p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="pixel-font text-2xl font-bold text-cyan-400">
-                  {selectedNode.name} Challenges
-                </h2>
-                <button 
-                  onClick={() => setSelectedNode(null)}
-                  className="text-gray-400 hover:text-white transition-colors text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <span className="pixel-font text-sm text-gray-300">Total Challenges:</span>
-                  <span className="pixel-font text-sm text-white font-bold">{selectedNode.challenges}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="pixel-font text-sm text-gray-300">Estimated Time:</span>
-                  <span className="pixel-font text-sm text-white font-bold">{selectedNode.challenges * 5}-{selectedNode.challenges * 10} min</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="pixel-font text-sm text-gray-300">XP Reward:</span>
-                  <span className="pixel-font text-sm text-purple-400 font-bold">+{selectedNode.xp} XP</span>
-                </div>
-              </div>
-              
-              <div className="bg-gray-800/50 p-4 rounded border border-gray-600 mb-6">
-                <h3 className="pixel-font text-sm text-yellow-400 mb-2">Challenge Preview:</h3>
-                <div className="pixel-font text-xs text-gray-300 leading-relaxed">
-                  {selectedLanguage === 'javascript' && selectedNode.id === 'js-basics-1' && "Learn about var, let, const, and basic data types. Complete coding exercises to master variable declarations and understand type coercion."}
-                  {selectedLanguage === 'javascript' && selectedNode.id === 'js-basics-2' && "Master function declarations, expressions, and arrow functions. Practice parameter handling and return statements."}
-                  {selectedLanguage === 'python' && selectedNode.id === 'py-basics-1' && "Learn Python syntax, indentation, and variable naming conventions. Practice with basic data types and print statements."}
-                  {selectedLanguage === 'html' && selectedNode.id === 'html-basics-1' && "Master HTML5 semantic elements, document structure, and proper nesting. Build your first complete webpage."}
-                  {selectedLanguage === 'algorithms' && selectedNode.id === 'algo-basics-1' && "Understand Big O notation, time and space complexity. Analyze different algorithms and their performance characteristics."}
-                  {!selectedNode.id.includes('basics') && "Advanced challenges that will test your understanding and push your skills to the next level. Are you ready?"}
-                </div>
-              </div>
-              
-              <div className="flex space-x-4">
-                <button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-4 pixel-font text-sm font-bold transform hover:scale-105 transition-all duration-300">
-                  🚀 START CHALLENGES
-                </button>
-                <button 
-                  onClick={() => setSelectedNode(null)}
-                  className="px-6 py-4 bg-gray-700 hover:bg-gray-600 text-white pixel-font text-sm font-bold transform hover:scale-105 transition-all duration-300 border-2 border-gray-500"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -24,6 +24,8 @@ import {
   Award
 } from 'lucide-react';
 import ChallengePage from '../pages/ChallengePage';
+import { use } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 
 const SkillsPathPage = () => {
@@ -77,6 +79,8 @@ const SkillsPathPage = () => {
       }
     };
   }, []);
+
+  const navigate= useNavigate();
 
   const languages = [
     { id: 'javascript', name: 'JavaScript', icon: Code, color: 'from-yellow-600 to-yellow-800', nodes: 15 },
@@ -322,11 +326,7 @@ const SkillsPathPage = () => {
           image-rendering: -moz-crisp-edges;
           image-rendering: crisp-edges;
         }
-        
-        .glow-text {
-          text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
-        }
-        
+      
         .floating-orb {
           animation: floatOrb 4s ease-in-out infinite;
         }
@@ -365,7 +365,7 @@ const SkillsPathPage = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <button className="p-2 bg-gray-800 hover:bg-gray-700 rounded border-2 border-gray-600 transition-colors">
-              <ChevronLeft className="w-6 h-6 text-white" />
+              <ChevronLeft onClick={() => navigate('/games')} className="w-6 h-6 text-white" />
             </button>
             <h1 className="pixel-font text-2xl md:text-4xl font-bold text-purple-400 glow-text">
               Skills Path

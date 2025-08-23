@@ -70,7 +70,7 @@ const CodingNavbar = () => {
             className="hidden sm:block px-4 py-2 text-gray-300 hover:text-white transition-colors duration-200 pixelated font-medium"
             onClick={() => navigate("/signin")}
             >
-              Login
+              SignUp
             </button>
 
             {/* Start Playing Button */}

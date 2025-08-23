@@ -21,50 +21,77 @@ import {
   Gamepad2,
   X,
   Clock,
-  Award
+  Award,
+  Loader2
 } from 'lucide-react';
 import ChallengePage from '../pages/ChallengePage';
-import { use } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { auth, db } from '../src/firebase';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 const SkillsPathPage = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
   const [selectedNode, setSelectedNode] = useState(null);
   const [userProgress, setUserProgress] = useState({
-    javascript: { completedNodes: ['js-basics-1', 'js-basics-2', 'js-vars-1'], currentXP: 450 },
-    python: { completedNodes: ['py-basics-1'], currentXP: 150 },
-    html: { completedNodes: ['html-basics-1', 'html-basics-2'], currentXP: 300 },
+    javascript: { completedNodes: [], currentXP: 0 },
+    python: { completedNodes: [], currentXP: 0 },
+    html: { completedNodes: [], currentXP: 0 },
     react: { completedNodes: [], currentXP: 0 },
-    algorithms: { completedNodes: ['algo-basics-1'], currentXP: 200 },
+    algorithms: { completedNodes: [], currentXP: 0 },
     databases: { completedNodes: [], currentXP: 0 }
   });
   const [showChallengePage, setShowChallengePage] = useState(false);
   const [selectedChallengeNode, setSelectedChallengeNode] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [user] = useAuthState(auth);
+  const navigate = useNavigate();
 
-  // When user clicks "START CHALLENGES"
-  const startChallenges = (node) => {
-    setSelectedChallengeNode(node);
-    setShowChallengePage(true);
-    setSelectedNode(null); // Close the node details modal
-  };
-
-  // Handle completion
-  const handleChallengeComplete = (nodeId) => {
-    // Update user progress
-    const newCompleted = [...userProgress[selectedLanguage].completedNodes, nodeId];
-    setUserProgress(prev => ({
-      ...prev,
-      [selectedLanguage]: {
-        ...prev[selectedLanguage],
-        completedNodes: newCompleted,
-        currentXP: prev[selectedLanguage].currentXP + selectedChallengeNode.xp
+  // Load user data from Firebase
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) {
+        navigate('/login');
+        return;
       }
-    }));
-    
-    setShowChallengePage(false);
-    setSelectedChallengeNode(null);
-  };
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          
+          // If skillsPath data exists, use it; otherwise initialize with defaults
+          if (userData.skillsPath) {
+            setUserProgress(userData.skillsPath);
+          } else {
+            // Initialize skillsPath structure in Firestore if it doesn't exist
+            const initialSkillsPath = {
+              javascript: { completedNodes: [], currentXP: 0 },
+              python: { completedNodes: [], currentXP: 0 },
+              html: { completedNodes: [], currentXP: 0 },
+              react: { completedNodes: [], currentXP: 0 },
+              algorithms: { completedNodes: [], currentXP: 0 },
+              databases: { completedNodes: [], currentXP: 0 }
+            };
+            
+            setUserProgress(initialSkillsPath);
+            
+            // Update Firestore with initial structure
+            await updateDoc(doc(db, 'users', user.uid), {
+              skillsPath: initialSkillsPath,
+              lastUpdated: serverTimestamp()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, navigate]);
 
   // Load pixelated font
   useEffect(() => {
@@ -80,7 +107,49 @@ const SkillsPathPage = () => {
     };
   }, []);
 
-  const navigate= useNavigate();
+  // When user clicks "START CHALLENGES"
+  const startChallenges = (node) => {
+    setSelectedChallengeNode(node);
+    setShowChallengePage(true);
+    setSelectedNode(null);
+  };
+
+  // Handle completion and update Firebase
+  const handleChallengeComplete = async (nodeId) => {
+    if (!user) return;
+
+    try {
+      const newCompleted = [...userProgress[selectedLanguage].completedNodes, nodeId];
+      const newXP = userProgress[selectedLanguage].currentXP + selectedChallengeNode.xp;
+      
+      const updatedProgress = {
+        ...userProgress,
+        [selectedLanguage]: {
+          ...userProgress[selectedLanguage],
+          completedNodes: newCompleted,
+          currentXP: newXP
+        }
+      };
+      
+      // Update local state
+      setUserProgress(updatedProgress);
+      
+      // Calculate total XP across all languages
+      const totalXP = Object.values(updatedProgress).reduce((total, lang) => total + lang.currentXP, 0);
+      
+      // Update Firestore
+      await updateDoc(doc(db, 'users', user.uid), {
+        skillsPath: updatedProgress,
+        xp: totalXP,
+        lastUpdated: serverTimestamp()
+      });
+      
+      setShowChallengePage(false);
+      setSelectedChallengeNode(null);
+    } catch (error) {
+      console.error('Error updating progress:', error);
+    }
+  };
 
   const languages = [
     { id: 'javascript', name: 'JavaScript', icon: Code, color: 'from-yellow-600 to-yellow-800', nodes: 15 },
@@ -298,6 +367,18 @@ const SkillsPathPage = () => {
       />
     );
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
+          <p className="text-white text-lg">Loading your skills progress...</p>
+        </div>
+      </div>
+    );
+  }
 
   // If showing challenge page, render it instead of the main interface
   if (showChallengePage && selectedChallengeNode) {

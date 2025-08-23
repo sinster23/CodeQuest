@@ -74,51 +74,130 @@ const handleSignup = async (e) => {
 
     // Add extra user details to Firestore
     await setDoc(doc(db, "users", user.uid), {
-      username: formData.username,
+      username: userData.username || 'Anonymous',
+      email: userData.email || '',
       createdAt: serverTimestamp(),
+      lastUpdated: serverTimestamp(),
+      
+      // General progression
       level: 1,
       xp: 0,
       badges: 0,
       rank: "Beginner",
-      achievements: {
+      
+      // Skills Path progress
+      skillsPath: {
+        javascript: { 
+          completedNodes: [], 
+          currentXP: 0,
+          lastPlayed: null
+        },
+        python: { 
+          completedNodes: [], 
+          currentXP: 0,
+          lastPlayed: null
+        },
+        html: { 
+          completedNodes: [], 
+          currentXP: 0,
+          lastPlayed: null
+        },
+        react: { 
+          completedNodes: [], 
+          currentXP: 0,
+          lastPlayed: null
+        },
+        algorithms: { 
+          completedNodes: [], 
+          currentXP: 0,
+          lastPlayed: null
+        },
+        databases: { 
+          completedNodes: [], 
+          currentXP: 0,
+          lastPlayed: null
+        }
+      },
+      
+      // Points Game achievements
       pointsGame: {
         totalPoints: 0,
+        highScore: 0,
+        gamesPlayed: 0,
         goalsCompleted: [],
-        lastPlayed: null
+        lastPlayed: null,
+        streak: 0,
+        bestStreak: 0,
+        achievements: {
+          firstGame: false,
+          scorer: false, // 100 points in single game
+          sharpshooter: false, // 500 points in single game
+          marathon: false, // 10 games played
+          dedicated: false, // 50 games played
+          champion: false, // 1000 total points
+          legend: false, // 5000 total points
+          streakMaster: false, // 5 game win streak
+          perfectionist: false // Complete all goals in a game
+        },
+        statistics: {
+          averageScore: 0,
+          totalTimePlayed: 0,
+          favoriteGameMode: null
+        }
       },
-      codebattles: {
+      
+      // Code Battles achievements  
+      codeBattles: {
+        // JavaScript badges
         jsbadge1: false,
         jsbadge2: false,
         jsbadge3: false,
         jsbadge4: false,
         jsbadge5: false,
+        
+        // Python badges
         pythonbadge1: false,
         pythonbadge2: false,
         pythonbadge3: false,
         pythonbadge4: false,
         pythonbadge5: false,
+        
+        // TypeScript badges
         tsbadge1: false,
         tsbadge2: false,
         tsbadge3: false,
         tsbadge4: false,
         tsbadge5: false,
+        
+        // C++ badges
         cppbadge1: false,
         cppbadge2: false,
         cppbadge3: false,
         cppbadge4: false,
         cppbadge5: false,
+        
+        // Java badges
         javabadge1: false,
         javabadge2: false,
         javabadge3: false,
         javabadge4: false,
-        javabadge5: false
+        javabadge5: false,
+        
+        // Overall stats
+        totalBattlesWon: 0,
+        totalBattlesPlayed: 0,
+        winRate: 0,
+        lastPlayed: null
       },
+      
+      // Story Quest progress
       storyQuest: {
         currentChapter: 0,
         completedChapters: [],
-        lastPlayed: null
-      }
-    }
+        lastPlayed: null,
+        choicesMade: {},
+        unlockedFeatures: []
+      },
     });
 
     setSuccess("Signup successful!");

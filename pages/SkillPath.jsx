@@ -448,7 +448,7 @@ const SkillsPathPage = () => {
             <button className="p-2 bg-gray-800 hover:bg-gray-700 rounded border-2 border-gray-600 transition-colors">
               <ChevronLeft onClick={() => navigate('/games')} className="w-6 h-6 text-white" />
             </button>
-            <h1 className="pixel-font text-2xl md:text-4xl font-bold text-purple-400 glow-text">
+            <h1 className="pixel-font text-2xl md:text-4xl font-bold text-zinc-400">
               Skills Path
             </h1>
           </div>

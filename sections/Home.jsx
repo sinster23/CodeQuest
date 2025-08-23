@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import  {useNavigate, useNavigation} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const CodingNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -20,7 +22,6 @@ const CodingNavbar = () => {
       }
     };
   }, []);
-  const navigate= useNavigate();
 
   return (
     <>
@@ -128,7 +129,7 @@ const CodingNavbar = () => {
       )}
 
       {/* Custom Styles */}
-      <style jsx>{`
+      <style>{`
         .pixelated {
           font-family: 'Press Start 2P', 'Courier New', monospace;
           image-rendering: pixelated;
@@ -199,9 +200,11 @@ const CodingNavbar = () => {
 
 // Home component with proper top padding to account for fixed navbar
 const Home = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-green-900 via-gray-900 to-black min-h-screen pt-40">
-      <style jsx>{`
+      <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
         .pixel-font {
@@ -337,7 +340,7 @@ const Home = () => {
       </p>
       
   
-      <button
+      <button onClick={() => navigate("/games")}
         className="pixel-button pixel-font text-black px-8 py-4 text-sm md:text-base font-bold shadow-lg relative z-10"
       >
         &gt; START_LEARNING

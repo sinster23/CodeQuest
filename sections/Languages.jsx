@@ -222,14 +222,6 @@ const CodingLanguagesShowcase = () => {
         ))}
       </div>
 
-      {/* Call-to-action */}
-      <div className="mt-16 fade-in-delay-2">
-        <button className="cta-button bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-4 rounded-lg font-bold text-lg pixelated relative overflow-hidden group transition-transform duration-300 hover:scale-105">
-          <span className="relative z-10">Start Coding</span>
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-green-500 translate-x-full group-hover:translate-x-0 transition-transform duration-300" />
-        </button>
-      </div>
-
       {/* CSS Animations */}
       <style jsx>{`
         .pixelated {

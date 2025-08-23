@@ -297,7 +297,7 @@ const GamesPage = () => {
 
   // Calculate current rank based on badges
   const getCurrentRank = () => {
-    const badgeCount = calculateBadgeCount(userStats.achievements);
+    const badgeCount = userStats.badges;
     if (badgeCount >= 15) return 'Gold';
     if (badgeCount >= 8) return 'Silver';
     if (badgeCount >= 3) return 'Bronze';
@@ -690,7 +690,7 @@ const GamesPage = () => {
             <QuickStatsCard 
               icon={Star} 
               label="Badges Earned" 
-              value={calculateBadgeCount(userStats.achievements)} 
+              value={userStats.badges}
               color="from-green-600 to-green-800" 
             />
           </div>

@@ -16,18 +16,24 @@ import {
   Award,
   Star,
   Zap,
+  AlertCircle,
+  Loader
 } from "lucide-react"
 
 const ChallengePage = ({ node, onComplete, onBack, language }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [completedQuestions, setCompletedQuestions] = useState(new Set())
   const [code, setCode] = useState("")
-  const [output, setOutput] = useState("")
+  const [apiResponse, setApiResponse] = useState(null)
   const [testResults, setTestResults] = useState([])
   const [isRunning, setIsRunning] = useState(false)
   const [timeSpent, setTimeSpent] = useState(0)
   const [showHints, setShowHints] = useState(false)
   const [allTestsPassed, setAllTestsPassed] = useState(false)
+  const [networkError, setNetworkError] = useState(false)
+  const [questions, setQuestions] = useState([])
+  const [loadingQuestions, setLoadingQuestions] = useState(true)
+  const [questionsError, setQuestionsError] = useState(null)
   const codeEditorRef = useRef(null)
   const startTimeRef = useRef(Date.now())
 
@@ -38,267 +44,68 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
     return () => clearInterval(timer)
   }, [])
 
-  // Simple validation - just check if specific text exists in code
-  const validateCode = useCallback((code, testCase) => {
-    const codeText = code.toLowerCase().trim()
+  // Generate questions when component mounts or node changes
+  useEffect(() => {
+    if (node && language) {
+      generateQuestions()
+    }
+  }, [node, language])
+
+  const generateQuestions = async () => {
+    setLoadingQuestions(true)
+    setQuestionsError(null)
     
-    switch (testCase.check) {
-      case 'contains':
-        return testCase.values.every(value => codeText.includes(value.toLowerCase()))
-      
-      case 'variable_declaration':
-        return testCase.variables.every(variable => {
-          const regex = new RegExp(`(let|const|var)\\s+${variable}`, 'i')
-          return regex.test(code)
-        })
-      
-      case 'function_declaration':
-        return testCase.functions.every(func => {
-          const regex = new RegExp(`(function\\s+${func}|const\\s+${func}\\s*=|${func}\\s*=\\s*function|${func}\\s*=>)`, 'i')
-          return regex.test(code)
-        })
-      
-      case 'has_return':
-        return /return\s+/i.test(code)
-      
-      case 'has_if_else':
-        return /if\s*\(/.test(code) && /else/.test(code)
-      
-      case 'has_switch':
-        return /switch\s*\(/.test(code) && /case/.test(code)
-      
-      default:
-        return false
-    }
-  }, [])
+    try {
+      const response = await fetch('http://localhost:5000/api/generate-challenges', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          language: language,
+          nodeId: node.id,
+          nodeName: node.name,
+          difficulty: node.difficulty,
+          challengeCount: 3 // Generate 3 challenges per node
+        }),
+      })
 
-  const questions = useMemo(() => {
-    const questionsDB = {
-      javascript: {
-        "js-basics-1": [
-          {
-            id: 1,
-            title: "Variable Declaration",
-            difficulty: 1,
-            description: "Create variables using let, const, and understand their differences.",
-            prompt: "Declare a constant variable named PI with value 3.14159, and a let variable named radius with value 5. Calculate the area of a circle and store it in a variable named area.",
-            starterCode: "// Declare your variables here\n\n// Calculate area (area = PI * radius * radius)\n",
-            testCases: [
-              { 
-                description: "Should declare PI constant", 
-                check: "variable_declaration", 
-                variables: ["PI"]
-              },
-              { 
-                description: "Should declare radius variable", 
-                check: "variable_declaration", 
-                variables: ["radius"]
-              },
-              { 
-                description: "Should calculate area variable", 
-                check: "variable_declaration", 
-                variables: ["area"]
-              },
-              {
-                description: "Should use PI and radius in calculation",
-                check: "contains",
-                values: ["PI", "radius"]
-              }
-            ],
-            hints: [
-              "Use const for values that won't change (like PI)",
-              "Use let for variables that might be reassigned",
-              "Area of circle = π × r² (PI * radius * radius)",
-              "Make sure to assign values: const PI = 3.14159"
-            ],
-          },
-          {
-            id: 2,
-            title: "Data Types",
-            difficulty: 1,
-            description: "Work with different JavaScript data types.",
-            prompt: 'Create variables: myString with "Hello World", myNumber with 42, myBoolean with true, and myArray with [1, 2, 3, 4, 5].',
-            starterCode: "// Create variables of different types\nlet myString = ;\nlet myNumber = ;\nlet myBoolean = ;\nlet myArray = ;\n\n// Optional: log them to see the values\nconsole.log(myString, myNumber, myBoolean, myArray);",
-            testCases: [
-              { 
-                description: "Should declare myString variable", 
-                check: "variable_declaration", 
-                variables: ["myString"]
-              },
-              { 
-                description: "Should include 'Hello World' string", 
-                check: "contains", 
-                values: ['"Hello World"', "'Hello World'"]
-              },
-              { 
-                description: "Should declare myNumber with 42", 
-                check: "contains", 
-                values: ["42"]
-              },
-              { 
-                description: "Should declare myArray with brackets", 
-                check: "contains", 
-                values: ["[", "]"]
-              }
-            ],
-            hints: [
-              "Strings are wrapped in quotes: 'Hello World' or \"Hello World\"",
-              "Numbers are written without quotes: 42",
-              "Booleans are: true or false",
-              "Arrays use square brackets: [1, 2, 3, 4, 5]"
-            ],
-          },
-          {
-            id: 3,
-            title: "Functions",
-            difficulty: 2,
-            description: "Create and call basic functions.",
-            prompt: "Create a function named greet that takes a name parameter and returns a greeting message like 'Hello, [name]!'",
-            starterCode: "// Create your function here\nfunction greet(name) {\n  // Your code here\n}\n\n// Test your function\nconsole.log(greet('Alice'));",
-            testCases: [
-              { 
-                description: "Should declare greet function", 
-                check: "function_declaration", 
-                functions: ["greet"]
-              },
-              { 
-                description: "Function should have return statement", 
-                check: "has_return"
-              },
-              { 
-                description: "Should use the name parameter", 
-                check: "contains", 
-                values: ["name"]
-              },
-              {
-                description: "Should return a greeting message",
-                check: "contains",
-                values: ["Hello", "return"]
-              }
-            ],
-            hints: [
-              "Functions can take parameters: function greet(name)",
-              "Use return to send a value back",
-              "You can use template literals: `Hello, ${name}!`",
-              "Or string concatenation: 'Hello, ' + name + '!'"
-            ],
-          },
-        ],
-        "js-basics-2": [
-          {
-            id: 1,
-            title: "Arrow Functions",
-            difficulty: 2,
-            description: "Practice with ES6 arrow function syntax.",
-            prompt: "Create an arrow function called addNumbers that takes two parameters (a, b) and returns their sum.",
-            starterCode: "// Create arrow function here\nconst addNumbers = ;\n\n// Test your function\nconsole.log(addNumbers(5, 3));",
-            testCases: [
-              { 
-                description: "Should use arrow function syntax", 
-                check: "contains", 
-                values: ["=>"]
-              },
-              { 
-                description: "Should declare addNumbers", 
-                check: "contains", 
-                values: ["addNumbers"]
-              },
-              { 
-                description: "Should have parameters a and b", 
-                check: "contains", 
-                values: ["a", "b"]
-              },
-              {
-                description: "Should return sum (a + b)",
-                check: "contains",
-                values: ["+"]
-              }
-            ],
-            hints: [
-              "Arrow functions use => syntax",
-              "Format: const functionName = (param1, param2) => expression",
-              "For single expressions, you can omit return and braces",
-              "Example: const add = (a, b) => a + b"
-            ],
-          },
-        ],
-        "js-basics-3": [
-          {
-            id: 1,
-            title: "If-Else Statements",
-            difficulty: 2,
-            description: "Learn conditional logic with if-else statements.",
-            prompt: 'Create a function called checkAge that takes an age parameter and returns "Adult" if age >= 18, "Teen" if age >= 13, or "Child" otherwise.',
-            starterCode: "function checkAge(age) {\n  // Your conditional logic here\n}\n\n// Test your function\nconsole.log(checkAge(25));\nconsole.log(checkAge(16));\nconsole.log(checkAge(8));",
-            testCases: [
-              { 
-                description: "Should have if-else statements", 
-                check: "has_if_else"
-              },
-              { 
-                description: "Should check for Adult condition", 
-                check: "contains", 
-                values: ["Adult", "18"]
-              },
-              { 
-                description: "Should check for Teen condition", 
-                check: "contains", 
-                values: ["Teen", "13"]
-              },
-              {
-                description: "Should have Child as default case",
-                check: "contains",
-                values: ["Child"]
-              }
-            ],
-            hints: [
-              "Use if, else if, and else statements",
-              "Check age >= 18 for Adult",
-              "Check age >= 13 for Teen (but less than 18)",
-              "Use else for Child (less than 13)"
-            ],
-          },
-          {
-            id: 2,
-            title: "Switch Statements", 
-            difficulty: 2,
-            description: "Practice switch statements for multiple conditions.",
-            prompt: 'Create a function getDayType that takes a day number (1-7) and returns "Weekend" for Saturday(6) and Sunday(7), "Weekday" for Monday-Friday(1-5).',
-            starterCode: "function getDayType(dayNumber) {\n  switch(dayNumber) {\n    // Your cases here\n  }\n}\n\n// Test your function\nconsole.log(getDayType(1)); // Monday\nconsole.log(getDayType(6)); // Saturday",
-            testCases: [
-              { 
-                description: "Should use switch statement", 
-                check: "has_switch"
-              },
-              { 
-                description: "Should handle Weekend cases", 
-                check: "contains", 
-                values: ["Weekend"]
-              },
-              { 
-                description: "Should handle Weekday cases", 
-                check: "contains", 
-                values: ["Weekday"]
-              },
-              {
-                description: "Should have case statements",
-                check: "contains",
-                values: ["case"]
-              }
-            ],
-            hints: [
-              "Use switch statement with case labels",
-              "Cases 6 and 7 should return 'Weekend'",
-              "Cases 1-5 should return 'Weekday'",
-              "Don't forget break statements!"
-            ],
-          },
-        ],
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-    }
 
-    return questionsDB[language]?.[node?.id] || []
-  }, [language, node?.id])
+      const data = await response.json()
+      
+      if (data.success && data.challenges) {
+        setQuestions(data.challenges)
+        // Reset to first question
+        setCurrentQuestion(0)
+        setCompletedQuestions(new Set())
+      } else {
+        throw new Error(data.error || "Failed to generate challenges")
+      }
+    } catch (error) {
+      console.error('Error generating challenges:', error)
+      setQuestionsError(error.message)
+      // Fallback to a basic question structure
+      setQuestions([{
+        id: 1,
+        title: `${node.name} Challenge`,
+        difficulty: node.difficulty,
+        description: `Practice ${node.name} concepts in ${language}`,
+        prompt: `Complete a challenge related to ${node.name}. Write your solution in the code editor below.`,
+        starterCode: `// ${node.name} Challenge\n// Write your solution here\n\n`,
+        hints: [
+          `Focus on ${node.name} concepts`,
+          `Review the fundamentals of ${node.name}`,
+          `Test your code with different scenarios`,
+          `Make sure your solution is complete`
+        ]
+      }])
+    } finally {
+      setLoadingQuestions(false)
+    }
+  }
 
   const currentQ = questions[currentQuestion]
 
@@ -307,45 +114,68 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
       setCode(currentQ.starterCode || "")
       setTestResults([])
       setAllTestsPassed(false)
-      setOutput("")
+      setApiResponse(null)
       setShowHints(false)
+      setNetworkError(false)
     }
   }, [currentQuestion, currentQ])
 
   const runCode = useCallback(async () => {
+    if (!code.trim()) {
+      setApiResponse({ error: "Please write some code before checking!" })
+      return
+    }
+
     setIsRunning(true)
-    setOutput("")
+    setApiResponse(null)
+    setNetworkError(false)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate processing
-
-      const results = currentQ.testCases.map((testCase, index) => {
-        const passed = validateCode(code, testCase)
-        return {
-          id: index,
-          description: testCase.description,
-          passed: passed,
-        }
+      const response = await fetch('http://localhost:5000/api/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: code,
+          question: currentQ,
+          language: language,
+          questionId: currentQ.id,
+          nodeId: node?.id
+        }),
       })
 
-      setTestResults(results)
-      const allPassed = results.every(r => r.passed)
-      setAllTestsPassed(allPassed)
-
-      let outputText = ""
-      if (allPassed) {
-        outputText = "✅ All tests passed! Great work!\n\n🎉 Click 'Complete' to move to the next question."
-      } else {
-        outputText = "❌ Some tests failed. Check your code and try again.\n\n💡 Make sure your code matches the requirements exactly."
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      setOutput(outputText)
+      const data = await response.json()
+      
+      if (data.success) {
+        setTestResults(data.testResults || [])
+        setAllTestsPassed(data.allPassed || false)
+        setApiResponse({
+          success: true,
+          overallFeedback: data.overallFeedback,
+          allPassed: data.allPassed
+        })
+      } else {
+        setApiResponse({ 
+          success: false, 
+          error: data.error || "Verification failed" 
+        })
+      }
     } catch (error) {
-      setOutput("❌ Error checking code: " + error.message)
+      console.error('Network error:', error)
+      setNetworkError(true)
+      setApiResponse({ 
+        success: false, 
+        error: "Network error. Please check if the backend server is running." 
+      })
     } finally {
       setIsRunning(false)
     }
-  }, [code, currentQ, validateCode])
+  }, [code, currentQ, language, node?.id])
 
   const completeQuestion = useCallback(() => {
     if (allTestsPassed) {
@@ -380,14 +210,55 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
   }, [])
 
   const getProgressPercentage = useCallback(() => {
+    if (questions.length === 0) return 0
     return Math.round((completedQuestions.size / questions.length) * 100)
   }, [completedQuestions.size, questions.length])
+
+  // Loading state
+  if (loadingQuestions) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 text-purple-400 mb-4 animate-spin mx-auto" />
+          <div className="text-2xl text-purple-400 mb-2">Generating Challenges...</div>
+          <div className="text-gray-300">Creating personalized coding challenges for {node?.name}</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (questionsError && questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-400 mb-4 mx-auto" />
+          <div className="text-2xl text-red-400 mb-4">Failed to Generate Challenges</div>
+          <div className="text-gray-300 mb-6">{questionsError}</div>
+          <div className="space-y-3">
+            <button 
+              onClick={generateQuestions}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded font-semibold"
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={onBack} 
+              className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded block w-full"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!currentQ) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="text-2xl text-red-400 mb-4">No questions available for this node</div>
+          <div className="text-2xl text-red-400 mb-4">No challenges available</div>
           <button onClick={onBack} className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded">
             Go Back
           </button>
@@ -410,7 +281,7 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
             </button>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-purple-400">
-                {node?.name || "JavaScript Basics"}
+                {node?.name || "Coding Challenge"}
               </h1>
               <div className="text-xs text-gray-400 mt-1">
                 Challenge {currentQuestion + 1} of {questions.length}
@@ -457,7 +328,7 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-cyan-400">{currentQ.title}</h2>
                 <div className="flex items-center space-x-1">
-                  {[...Array(currentQ.difficulty)].map((_, i) => (
+                  {[...Array(currentQ.difficulty || 1)].map((_, i) => (
                     <Star key={i} className="w-3 h-3 text-yellow-400" fill="currentColor" />
                   ))}
                 </div>
@@ -479,14 +350,14 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                   {showHints ? "Hide" : "Show"} Hints
                 </button>
                 <button
-                  onClick={() => setCode(currentQ.starterCode)}
+                  onClick={() => setCode(currentQ.starterCode || "")}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-xs transition-colors flex items-center justify-center rounded"
                 >
                   <RotateCcw className="w-3 h-3" />
                 </button>
               </div>
 
-              {showHints && (
+              {showHints && currentQ.hints && (
                 <div className="bg-yellow-900/30 p-4 rounded border border-yellow-600/30">
                   <h3 className="text-sm text-yellow-400 mb-2 font-semibold">Hints:</h3>
                   <ul className="space-y-1">
@@ -503,7 +374,7 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
 
             {/* Question Navigation */}
             <div className="bg-gray-800/50 border border-gray-600 p-4 rounded">
-              <h3 className="text-sm font-bold text-white mb-3">Questions</h3>
+              <h3 className="text-sm font-bold text-white mb-3">Challenges</h3>
               <div className="grid grid-cols-3 gap-2">
                 {questions.map((q, index) => (
                   <button
@@ -541,7 +412,7 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                     {isRunning ? (
                       <>
                         <div className="animate-spin w-3 h-3 border border-white border-t-transparent rounded-full mr-2" />
-                        Running...
+                        Checking...
                       </>
                     ) : (
                       <>
@@ -584,11 +455,37 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                 </div>
               </div>
 
-              {/* Output */}
-              {output && (
+              {/* Network Error Display */}
+              {networkError && (
+                <div className="mt-4 bg-red-900/30 border border-red-600 p-4 rounded">
+                  <div className="flex items-center mb-2">
+                    <AlertCircle className="w-5 h-5 text-red-400 mr-2" />
+                    <h3 className="text-sm text-red-400 font-semibold">Connection Error</h3>
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    Cannot connect to the verification server. Please ensure the backend is running on port 5000.
+                  </p>
+                </div>
+              )}
+
+              {/* API Response Display */}
+              {apiResponse && (
                 <div className="mt-4 bg-black p-4 rounded border border-gray-600">
-                  <h3 className="text-sm text-cyan-400 mb-2 font-semibold">Output:</h3>
-                  <pre className="text-sm text-gray-300 whitespace-pre-wrap">{output}</pre>
+                  <h3 className="text-sm text-cyan-400 mb-2 font-semibold">Verification Result:</h3>
+                  {apiResponse.success ? (
+                    <div>
+                      <div className={`text-sm mb-2 ${apiResponse.allPassed ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {apiResponse.allPassed ? '✅ All tests passed!' : '⚠️ Some issues found'}
+                      </div>
+                      {apiResponse.overallFeedback && (
+                        <p className="text-sm text-gray-300 whitespace-pre-wrap">{apiResponse.overallFeedback}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-red-400">
+                      ❌ {apiResponse.error}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -598,30 +495,32 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
               <div className="bg-gray-800/50 border border-gray-600 p-6 rounded">
                 <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center">
                   <Target className="w-5 h-5 mr-2" />
-                  Test Results
+                  Detailed Feedback
                 </h2>
 
                 <div className="space-y-3">
                   {testResults.map((result, index) => (
                     <div
-                      key={result.id}
+                      key={index}
                       className={`p-4 rounded border-l-4 ${
                         result.passed
                           ? "border-l-green-400 bg-green-900/20"
                           : "border-l-red-400 bg-red-900/20"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-white font-medium">Test {index + 1}</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-white font-medium">{result.description}</span>
                         {result.passed ? (
                           <CheckCircle className="w-5 h-5 text-green-400" />
                         ) : (
                           <XCircle className="w-5 h-5 text-red-400" />
                         )}
                       </div>
-                      <div className="text-xs text-gray-300 mt-1">
-                        {result.description}
-                      </div>
+                      {result.feedback && (
+                        <div className="text-xs text-gray-300 mt-1 bg-black/30 p-2 rounded">
+                          {result.feedback}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -730,6 +629,7 @@ const App = () => {
     id: "js-basics-1",
     name: "JavaScript Basics - Variables & Types",
     xp: 150,
+    difficulty: 2
   }
 
   const handleComplete = (nodeId) => {
@@ -747,7 +647,7 @@ const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-4 text-green-400">Challenge Completed!</h1>
-          <p className="text-gray-300 mb-6">Great job on completing the JavaScript basics challenges.</p>
+          <p className="text-gray-300 mb-6">Great job on completing the challenges.</p>
           <button
             onClick={() => setShowChallenge(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded font-semibold"

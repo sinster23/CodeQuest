@@ -521,6 +521,121 @@ Return the response as a valid JSON array with this exact format:
 Generate ${count} questions now:`;
 }
 
+app.post('/api/ai-assistant', async (req, res) => {
+  try {
+    const { message, conversationHistory = [] } = req.body;
+
+    // Validate required parameters
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message is required and cannot be empty'
+      });
+    }
+
+    console.log('AI Assistant query:', message);
+
+    // Create context-aware prompt for Seekho AI
+    const assistantPrompt = createAssistantPrompt(message, conversationHistory);
+
+    // Generate response using Gemini
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const result = await model.generateContent(assistantPrompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean up the response (remove any markdown formatting for now)
+    const cleanResponse = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').trim();
+
+    console.log('AI Assistant response generated successfully');
+
+    res.json({
+      success: true,
+      response: cleanResponse,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error in AI Assistant:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate AI response',
+      details: error.message
+    });
+  }
+});
+
+// Create assistant prompt for Gemini (NEW FUNCTION)
+function createAssistantPrompt(userMessage, conversationHistory) {
+  // Build conversation context
+  let contextMessages = '';
+  if (conversationHistory && conversationHistory.length > 0) {
+    contextMessages = '\n\nRecent conversation:\n';
+    conversationHistory.slice(-4).forEach(msg => {
+      const role = msg.type === 'user' ? 'User' : 'Assistant';
+      contextMessages += `${role}: ${msg.text}\n`;
+    });
+  }
+
+  const systemPrompt = `You are Seekho AI, a helpful and friendly AI assistant for the CodeSeekho learning platform. Your role is to:
+
+1. HELP USERS NAVIGATE: Guide users through different aspects of the CodeSeekho website and platform features
+2. ANSWER CODING QUESTIONS: Provide clear, concise and short beginner-friendly explanations for basic coding concepts
+3. LEARNING SUPPORT: Help users understand programming concepts, suggest learning paths, and provide coding tips in short
+4. PLATFORM GUIDANCE: Explain how to use CodeSeekho features, navigate lessons, find challenges, etc. in short
+
+PERSONALITY TRAITS:
+- Friendly and encouraging, especially to beginners
+- Clear and concise explanations
+- Use emojis appropriately to make responses engaging
+- Always supportive and patient
+- Focus on practical, actionable advice
+
+KNOWLEDGE AREAS:
+- Programming languages: JavaScript, Python, HTML/CSS, React, TypeScript, C++, Java
+- Web development concepts and best practices
+- CodeSeekho platform features and navigation
+- CodeSeekho has a home page, a games section with coding battles, a learning section with interactive lessons, and a profile dashboard
+- Users can click on start learning or start playing to navigate to dashbaord. Dashboard has learning paths, coding battles and story quest sections .
+- Users can earn xp points and badges based on the progress they make in these sections
+- Codeseekho also has a streak tracker at the bottom of user dashboard which shows the total streaks and daywise interaction
+- Codeseekho offers free and premium plans. Free plan has limited access to content while premium unlocks everything
+- Learning strategies and programming fundamentals
+- Debugging and problem-solving techniques
+
+RESPONSE GUIDELINES:
+- Keep responses helpful but not too lengthy
+- Use examples when explaining coding concepts
+- If asked about advanced topics beyond basic level, acknowledge complexity and suggest learning progression
+- For platform navigation questions, be specific about where to find features
+- If you don't know something specific about CodeSeeho's current features, be honest and suggest they explore the platform
+
+CURRENT USER MESSAGE: "${userMessage}"${contextMessages}
+
+Provide a helpful, friendly response that directly addresses the user's question or concern. Keep it conversational and engaging, using appropriate emojis.`;
+
+  return systemPrompt;
+}
+
+// Helper function to detect question type (OPTIONAL - for future enhancements)
+function detectQuestionType(message) {
+  const lowercaseMessage = message.toLowerCase();
+  
+  if (lowercaseMessage.includes('navigate') || lowercaseMessage.includes('find') || lowercaseMessage.includes('where')) {
+    return 'navigation';
+  }
+  
+  if (lowercaseMessage.includes('code') || lowercaseMessage.includes('function') || lowercaseMessage.includes('debug')) {
+    return 'coding';
+  }
+  
+  if (lowercaseMessage.includes('learn') || lowercaseMessage.includes('start') || lowercaseMessage.includes('beginner')) {
+    return 'learning';
+  }
+  
+  return 'general';
+}
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error('Server Error:', error);

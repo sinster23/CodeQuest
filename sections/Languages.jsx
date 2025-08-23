@@ -145,7 +145,7 @@ const CodingLanguagesShowcase = () => {
   );
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white flex flex-col items-center justify-center p-8 relative overflow-hidden">
       {/* Background grid effect */}
       <div className="absolute inset-0 opacity-10">
         <div 
@@ -158,21 +158,6 @@ const CodingLanguagesShowcase = () => {
             backgroundSize: '50px 50px'
           }}
         />
-      </div>
-
-      {/* Animated background particles */}
-      <div className="absolute inset-0">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="particle absolute w-1 h-1 bg-green-400 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`
-            }}
-          />
-        ))}
       </div>
 
       {/* Header Section */}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from '../src/firebase';
+import { auth,db } from '../src/firebase';
 import { use } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const PixelatedSignIn = () => {
   const [formData, setFormData] = useState({
@@ -51,38 +52,89 @@ const PixelatedSignIn = () => {
 
   // Handle signup
 const handleSignup = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setIsLoading(true);
+  e.preventDefault();
+  setError("");
+  setSuccess("");
+  setIsLoading(true);
 
-    if (!formData.username || !formData.password) {
-      showMessage("Please enter both Player ID and Access Code!");
-      setIsLoading(false);
-      return;
+  if (!formData.username || !formData.password) {
+    showMessage("Please enter both Player ID and Access Code!");
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      formData.username,
+      formData.password
+    );
+
+    const user = userCredential.user;
+
+    // Add extra user details to Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      username: formData.username,
+      createdAt: serverTimestamp(),
+      level: 1,
+      xp: 0,
+      badges: 0,
+      rank: "Beginner",
+      achievements: {
+      pointsGame: {
+        totalPoints: 0,
+        goalsCompleted: [],
+        lastPlayed: null
+      },
+      codebattles: {
+        jsbadge1: false,
+        jsbadge2: false,
+        jsbadge3: false,
+        jsbadge4: false,
+        jsbadge5: false,
+        pythonbadge1: false,
+        pythonbadge2: false,
+        pythonbadge3: false,
+        pythonbadge4: false,
+        pythonbadge5: false,
+        tsbadge1: false,
+        tsbadge2: false,
+        tsbadge3: false,
+        tsbadge4: false,
+        tsbadge5: false,
+        cppbadge1: false,
+        cppbadge2: false,
+        cppbadge3: false,
+        cppbadge4: false,
+        cppbadge5: false,
+        javabadge1: false,
+        javabadge2: false,
+        javabadge3: false,
+        javabadge4: false,
+        javabadge5: false
+      },
+      storyQuest: {
+        currentChapter: 0,
+        completedChapters: [],
+        lastPlayed: null
+      }
     }
+    });
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.username,
-        formData.password
-      );
+    setSuccess("Signup successful!");
+    showMessage(`Welcome, ${formData.username}! Entering the game world...`);
 
-      setSuccess("Signup successful!");
-      showMessage(`Welcome, ${formData.username}! Entering the game world...`);
-
-      // navigate after a short delay so user can see the message
-      setTimeout(() => {
-        setIsLoading(false);
-        navigate("/games"); 
-      }, 1500);
-    } catch (err) {
+    setTimeout(() => {
       setIsLoading(false);
-      setError(err.message);
-      showMessage("Signup failed. Please try again.");
-    }
-  };
+      navigate("/games");
+    }, 1500);
+
+  } catch (err) {
+    setIsLoading(false);
+    setError(err.message);
+    showMessage("Signup failed. Please try again.");
+  }
+};
 
   // Handle other actions
   const handleAction = (action) => {

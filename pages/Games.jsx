@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Trophy, 
@@ -18,19 +19,62 @@ import {
   Code
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../src/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 const GamesPage = () => {
   const [selectedMode, setSelectedMode] = useState(null);
   const [userStats, setUserStats] = useState({
-    level: 5,
-    xp: 1250,
-    rank: 'Silver',
-    wins: 23,
-    gamesPlayed: 45,
-    currentStoryChapter: 3
+    level: 1,
+    xp: 0,
+    rank: 'Beginner',
+    badges: 0,
+    username: '',
+    achievements: {
+      pointsGame: {
+        totalPoints: 0,
+        goalsCompleted: [],
+        lastPlayed: null
+      },
+      codebattles: {
+        jsbadge1: false,
+        jsbadge2: false,
+        jsbadge3: false,
+        jsbadge4: false,
+        jsbadge5: false,
+        pythonbadge1: false,
+        pythonbadge2: false,
+        pythonbadge3: false,
+        pythonbadge4: false,
+        pythonbadge5: false,
+        tsbadge1: false,
+        tsbadge2: false,
+        tsbadge3: false,
+        tsbadge4: false,
+        tsbadge5: false,
+        cppbadge1: false,
+        cppbadge2: false,
+        cppbadge3: false,
+        cppbadge4: false,
+        cppbadge5: false,
+        javabadge1: false,
+        javabadge2: false,
+        javabadge3: false,
+        javabadge4: false,
+        javabadge5: false
+      },
+      storyQuest: {
+        currentChapter: 0,
+        completedChapters: [],
+        lastPlayed: null
+      }
+    }
   });
+  const [loading, setLoading] = useState(true);
+  const [user] = useAuthState(auth);
 
-  const navigate= useNavigate();
+  const navigate = useNavigate();
 
   // Load pixelated font
   useEffect(() => {
@@ -46,24 +90,81 @@ const GamesPage = () => {
     };
   }, []);
 
+  // Fetch user data from Firebase
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserStats(userData);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
+  // Calculate badge count from achievements
+  const calculateBadgeCount = (achievements) => {
+    let badgeCount = 0;
+    if (achievements?.codebattles) {
+      Object.values(achievements.codebattles).forEach(badge => {
+        if (badge === true) badgeCount++;
+      });
+    }
+    return badgeCount;
+  };
+
+  // Calculate completed goals count
+  const getCompletedGoalsCount = () => {
+    return userStats.achievements?.pointsGame?.goalsCompleted?.length || 0;
+  };
+
+  // Calculate story progress percentage
+  const getStoryProgress = () => {
+    const completedChapters = userStats.achievements?.storyQuest?.completedChapters?.length || 0;
+    const totalChapters = 15; // As defined in your original code
+    return Math.round((completedChapters / totalChapters) * 100);
+  };
+
+  // Calculate current rank based on badges
+  const getCurrentRank = () => {
+    const badgeCount = calculateBadgeCount(userStats.achievements);
+    if (badgeCount >= 15) return 'Gold';
+    if (badgeCount >= 8) return 'Silver';
+    if (badgeCount >= 3) return 'Bronze';
+    return 'Beginner';
+  };
+
   const gameStats = {
     pointBased: {
-      completedPaths: 3,
-      totalPaths: 12,
+      completedGoals: getCompletedGoalsCount(),
+      totalPoints: userStats.achievements?.pointsGame?.totalPoints || 0,
       currentGoal: "Master JavaScript Loops",
       nextReward: "500 XP + Badge"
     },
     pvp: {
-      currentRank: "Silver III",
-      wins: 23,
-      losses: 22,
-      winRate: "51%",
-      nextRankUp: "7 wins needed"
+      currentRank: getCurrentRank(),
+      totalBadges: calculateBadgeCount(userStats.achievements),
+      jsBadges: Object.entries(userStats.achievements?.codebattles || {}).filter(([key, value]) => key.startsWith('js') && value).length,
+      pythonBadges: Object.entries(userStats.achievements?.codebattles || {}).filter(([key, value]) => key.startsWith('python') && value).length
     },
     storyQuest: {
-      currentChapter: "Chapter 3: The Bug Hunt",
-      progress: 67,
-      unlockedChapters: 3,
+      currentChapter: `Chapter ${userStats.achievements?.storyQuest?.currentChapter || 0}: The Beginning`,
+      progress: getStoryProgress(),
+      unlockedChapters: userStats.achievements?.storyQuest?.completedChapters?.length || 0,
       totalChapters: 15
     }
   };
@@ -155,6 +256,26 @@ const GamesPage = () => {
       <div className="pixel-font text-xs text-white/80">{label}</div>
     </div>
   );
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-900 via-gray-900 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="pixel-font text-xl text-green-400 mb-4">LOADING...</div>
+          <div className="w-16 h-2 bg-gray-700 mx-auto">
+            <div className="h-full bg-gradient-to-r from-green-400 to-blue-400 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-gray-900 to-black text-white relative overflow-hidden">
@@ -249,6 +370,9 @@ const GamesPage = () => {
           <h1 className="pixel-font text-4xl md:text-6xl font-bold mb-6 glow-text text-green-400">
             Game <span className="text-cyan-400">Arena</span>
           </h1>
+          <p className="pixel-font text-sm md:text-base max-w-3xl mx-auto text-green-300 leading-relaxed mb-2">
+            Welcome back, <span className="text-cyan-400">{userStats.username || 'Coder'}</span>!
+          </p>
           <p className="pixel-font text-sm md:text-base max-w-3xl mx-auto text-green-300 leading-relaxed mb-8">
             Choose your battle! Master coding through epic quests, compete against others, 
             or follow structured learning paths to become a coding legend.
@@ -271,13 +395,13 @@ const GamesPage = () => {
             <QuickStatsCard 
               icon={Crown} 
               label="Rank" 
-              value={userStats.rank} 
+              value={getCurrentRank()} 
               color="from-blue-600 to-blue-800" 
             />
             <QuickStatsCard 
-              icon={Target} 
-              label="Win Rate" 
-              value={`${Math.round((userStats.wins / userStats.gamesPlayed) * 100)}%`} 
+              icon={Star} 
+              label="Badges Earned" 
+              value={calculateBadgeCount(userStats.achievements)} 
               color="from-green-600 to-green-800" 
             />
           </div>

@@ -205,7 +205,7 @@ const PixelatedLogin = () => {
                   textShadow: '3px 3px 0px #003322'
                 }}
               >
-                Code_Seekho
+                CodeSeekho
               </h1>
               <div className="text-sm" style={{ color: '#ff6b6b' }}>
                 SECURE ACCESS TERMINAL

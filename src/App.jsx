@@ -6,6 +6,7 @@ import Languages from "../sections/Languages";
 import Login from "../backend/login";
 import Games from '../pages/Games';
 import SkillsPathPage from '../pages/SkillPath';
+import Battles from '../pages/Battle'; // Assuming you have a Battles page
 import ProtectedRoute from '../components/ProtectedRoute';
 import "./App.css";
 
@@ -33,6 +34,14 @@ function App() {
         element={
           <ProtectedRoute>
             <SkillsPathPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/battles" 
+        element={
+          <ProtectedRoute>
+            <Battles />
           </ProtectedRoute>
         } 
       />

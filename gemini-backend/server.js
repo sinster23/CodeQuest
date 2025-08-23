@@ -308,6 +308,7 @@ Provide at least 2-4 test results covering different aspects of the solution.
 });
 
 // Create challenge prompt for Gemini (NEW FUNCTION)
+// Create challenge prompt for Gemini (UPDATED - SHORTER AND MORE PRECISE)
 function createChallengePrompt(language, nodeId, nodeName, difficulty, count) {
   // Node-specific topics mapping
   const nodeTopics = {
@@ -396,11 +397,11 @@ function createChallengePrompt(language, nodeId, nodeName, difficulty, count) {
   };
 
   const difficultyLevels = {
-    1: 'beginner level with very basic concepts',
-    2: 'beginner to intermediate level with fundamental concepts',
-    3: 'intermediate level with moderate complexity',
-    4: 'advanced level with complex concepts',
-    5: 'expert level with very advanced concepts'
+    1: 'beginner',
+    2: 'basic',
+    3: 'intermediate',
+    4: 'advanced',
+    5: 'expert'
   };
 
   const nodeInfo = nodeTopics[nodeId] || {
@@ -409,48 +410,40 @@ function createChallengePrompt(language, nodeId, nodeName, difficulty, count) {
     starterCode: `// ${nodeName} challenge\n// Write your solution here\n\n`
   };
 
-  const difficultyDescription = difficultyLevels[difficulty] || 'moderate level';
+  const difficultyLevel = difficultyLevels[difficulty] || 'intermediate';
 
-  return `Generate exactly ${count} coding challenges for ${language} programming, specifically focusing on: ${nodeInfo.topic}.
+  return `Create ${count} concise ${language} coding challenges for "${nodeInfo.topic}". Keep challenges SHORT and FOCUSED.
 
-The challenges should cover these concepts: ${nodeInfo.concepts.join(', ')}.
-The difficulty should be ${difficultyDescription}.
+Topic: ${nodeInfo.topic}
+Difficulty: ${difficultyLevel}
 
-Requirements for each challenge:
-1. Must be practical and test real programming knowledge
-2. Should be relevant to the topic: ${nodeInfo.topic}
-3. Include clear, specific instructions
-4. Provide helpful hints (3-5 hints per challenge)
-5. Include appropriate starter code
-6. Be suitable for ${language} programming
+Requirements:
+- BRIEF titles (5-8 words max)
+- SHORT descriptions (1-2 sentences max)
+- CLEAR, concise prompts (2-3 sentences max)
+- Simple starter code
+- 3-4 short hints per challenge
 
-Return the response as a valid JSON array with this EXACT format:
+Return ONLY valid JSON array:
 [
   {
     "id": 1,
-    "title": "Challenge Title",
+    "title": "Short Challenge Title",
     "difficulty": ${difficulty},
-    "description": "Brief description of what this challenge teaches",
-    "prompt": "Detailed instructions for what the student needs to implement. Be very specific about requirements and expected behavior.",
-    "starterCode": "// Appropriate starter code for ${language}\\n// Include helpful comments\\n",
+    "description": "One sentence explaining what this teaches.",
+    "prompt": "Write a function that does X. Input: Y. Return: Z.",
+    "starterCode": "function name() {\\n  // code here\\n}",
     "hints": [
-      "Specific hint about the approach",
-      "Hint about ${language} syntax or methods to use",
-      "Hint about edge cases or considerations",
-      "Hint about best practices"
+      "Use method X",
+      "Check for Y",
+      "Remember Z"
     ]
   }
 ]
 
-Important guidelines:
-- Make challenges progressive in difficulty within the topic
-- Use real-world scenarios when possible
-- Ensure starter code is syntactically correct
-- Make hints specific and actionable
-- Focus on ${nodeInfo.topic} concepts throughout
-- For difficulty ${difficulty}, make it appropriately challenging
+Focus on: ${nodeInfo.concepts.join(', ')}
 
-Generate ${count} challenges now:`;
+Make each challenge quick to read and understand. NO verbose explanations.`;
 }
 
 // Create MCQ prompt for Gemini (EXISTING FUNCTION - RENAMED)

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Trophy, 
@@ -16,11 +15,15 @@ import {
   Flag,
   Gamepad2,
   Timer,
-  Code
+  Code,
+  Calendar,
+  Flame,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../src/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 const GamesPage = () => {
@@ -31,13 +34,22 @@ const GamesPage = () => {
     rank: 'Beginner',
     badges: 0,
     username: '',
+    // Daily streak data
+    dailyStreak: {
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActiveDate: null,
+      streakHistory: [] // Array of dates when user was active
+    },
     achievements: {
       pointsGame: {
         totalPoints: 0,
         goalsCompleted: [],
-        lastPlayed: null
+        lastPlayed: null,
+        streak: 0,
+        bestStreak: 0
       },
-      codebattles: {
+      codeBattles: {
         jsbadge1: false,
         jsbadge2: false,
         jsbadge3: false,
@@ -48,27 +60,43 @@ const GamesPage = () => {
         pythonbadge3: false,
         pythonbadge4: false,
         pythonbadge5: false,
-        tsbadge1: false,
-        tsbadge2: false,
-        tsbadge3: false,
-        tsbadge4: false,
-        tsbadge5: false,
-        cppbadge1: false,
-        cppbadge2: false,
-        cppbadge3: false,
-        cppbadge4: false,
-        cppbadge5: false,
-        javabadge1: false,
-        javabadge2: false,
-        javabadge3: false,
-        javabadge4: false,
-        javabadge5: false
+        htmlbadge1: false,
+        htmlbadge2: false,
+        htmlbadge3: false,
+        htmlbadge4: false,
+        htmlbadge5: false,
+        reactbadge1: false,
+        reactbadge2: false,
+        reactbadge3: false,
+        reactbadge4: false,
+        reactbadge5: false,
+        algobadge1: false,
+        algobadge2: false,
+        algobadge3: false,
+        algobadge4: false,
+        algobadge5: false,
+        dbbadge1: false,
+        dbbadge2: false,
+        dbbadge3: false,
+        dbbadge4: false,
+        dbbadge5: false,
+        totalBattlesWon: 0,
+        totalBattlesPlayed: 0,
+        lastPlayed: null
       },
       storyQuest: {
         currentChapter: 0,
         completedChapters: [],
         lastPlayed: null
       }
+    },
+    skillsPath: {
+      javascript: { completedNodes: [], currentXP: 0, lastPlayed: null },
+      python: { completedNodes: [], currentXP: 0, lastPlayed: null },
+      html: { completedNodes: [], currentXP: 0, lastPlayed: null },
+      react: { completedNodes: [], currentXP: 0, lastPlayed: null },
+      algorithms: { completedNodes: [], currentXP: 0, lastPlayed: null },
+      databases: { completedNodes: [], currentXP: 0, lastPlayed: null }
     }
   });
   const [loading, setLoading] = useState(true);
@@ -90,6 +118,114 @@ const GamesPage = () => {
     };
   }, []);
 
+  // Utility function to get today's date string
+  const getTodayDateString = () => {
+    return new Date().toDateString();
+  };
+
+  // Utility function to get yesterday's date string
+  const getYesterdayDateString = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toDateString();
+  };
+
+  // Function to calculate streak based on activity dates
+  const calculateStreak = (streakHistory, lastActiveDate) => {
+    if (!streakHistory || streakHistory.length === 0) {
+      return { currentStreak: 0, longestStreak: 0 };
+    }
+
+    // Sort dates in descending order
+    const sortedDates = streakHistory.sort((a, b) => new Date(b) - new Date(a));
+    const today = getTodayDateString();
+    const yesterday = getYesterdayDateString();
+    
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+
+    // Calculate current streak
+    if (sortedDates[0] === today || sortedDates[0] === yesterday) {
+      let expectedDate = new Date(sortedDates[0]);
+      
+      for (let i = 0; i < sortedDates.length; i++) {
+        if (sortedDates[i] === expectedDate.toDateString()) {
+          currentStreak++;
+          expectedDate.setDate(expectedDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+    }
+
+    // Calculate longest streak
+    for (let i = 0; i < sortedDates.length; i++) {
+      if (i === 0) {
+        tempStreak = 1;
+      } else {
+        const currentDate = new Date(sortedDates[i]);
+        const previousDate = new Date(sortedDates[i - 1]);
+        const dayDifference = (previousDate - currentDate) / (1000 * 60 * 60 * 24);
+        
+        if (dayDifference === 1) {
+          tempStreak++;
+        } else {
+          longestStreak = Math.max(longestStreak, tempStreak);
+          tempStreak = 1;
+        }
+      }
+    }
+    longestStreak = Math.max(longestStreak, tempStreak);
+
+    return { currentStreak, longestStreak };
+  };
+
+  // Function to update daily streak when user completes any activity
+  const updateDailyStreak = async () => {
+    if (!user) return;
+
+    const today = getTodayDateString();
+    const userDocRef = doc(db, 'users', user.uid);
+
+    try {
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const currentStreakHistory = userData.dailyStreak?.streakHistory || [];
+        
+        // Check if user was already active today
+        if (!currentStreakHistory.includes(today)) {
+          const updatedStreakHistory = [...currentStreakHistory, today];
+          const { currentStreak, longestStreak } = calculateStreak(updatedStreakHistory, today);
+
+          // Update user document
+          await updateDoc(userDocRef, {
+            'dailyStreak.streakHistory': updatedStreakHistory,
+            'dailyStreak.currentStreak': currentStreak,
+            'dailyStreak.longestStreak': Math.max(longestStreak, userData.dailyStreak?.longestStreak || 0),
+            'dailyStreak.lastActiveDate': today,
+            lastUpdated: serverTimestamp()
+          });
+
+          // Update local state
+          setUserStats(prevStats => ({
+            ...prevStats,
+            dailyStreak: {
+              ...prevStats.dailyStreak,
+              streakHistory: updatedStreakHistory,
+              currentStreak: currentStreak,
+              longestStreak: Math.max(longestStreak, prevStats.dailyStreak?.longestStreak || 0),
+              lastActiveDate: today
+            }
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error updating daily streak:', error);
+    }
+  };
+
   // Fetch user data from Firebase
   useEffect(() => {
     const fetchUserData = async () => {
@@ -104,6 +240,26 @@ const GamesPage = () => {
         
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          
+          // Initialize dailyStreak if it doesn't exist
+          if (!userData.dailyStreak) {
+            userData.dailyStreak = {
+              currentStreak: 0,
+              longestStreak: 0,
+              lastActiveDate: null,
+              streakHistory: []
+            };
+          }
+
+          // Recalculate streak based on history
+          const { currentStreak, longestStreak } = calculateStreak(
+            userData.dailyStreak.streakHistory || [], 
+            userData.dailyStreak.lastActiveDate
+          );
+
+          userData.dailyStreak.currentStreak = currentStreak;
+          userData.dailyStreak.longestStreak = Math.max(longestStreak, userData.dailyStreak.longestStreak || 0);
+
           setUserStats(userData);
         }
       } catch (error) {
@@ -119,9 +275,9 @@ const GamesPage = () => {
   // Calculate badge count from achievements
   const calculateBadgeCount = (achievements) => {
     let badgeCount = 0;
-    if (achievements?.codebattles) {
-      Object.values(achievements.codebattles).forEach(badge => {
-        if (badge === true) badgeCount++;
+    if (achievements?.codeBattles) {
+      Object.entries(achievements.codeBattles).forEach(([key, value]) => {
+        if (key.includes('badge') && value === true) badgeCount++;
       });
     }
     return badgeCount;
@@ -135,7 +291,7 @@ const GamesPage = () => {
   // Calculate story progress percentage
   const getStoryProgress = () => {
     const completedChapters = userStats.achievements?.storyQuest?.completedChapters?.length || 0;
-    const totalChapters = 15; // As defined in your original code
+    const totalChapters = 15;
     return Math.round((completedChapters / totalChapters) * 100);
   };
 
@@ -148,6 +304,26 @@ const GamesPage = () => {
     return 'Beginner';
   };
 
+  // Generate last 7 days for streak display
+  const getLast7Days = () => {
+    const days = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      days.push({
+        date: date.toDateString(),
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNumber: date.getDate(),
+        isActive: userStats.dailyStreak?.streakHistory?.includes(date.toDateString()) || false,
+        isToday: date.toDateString() === getTodayDateString()
+      });
+    }
+    
+    return days;
+  };
+
   const gameStats = {
     pointBased: {
       completedGoals: getCompletedGoalsCount(),
@@ -158,8 +334,8 @@ const GamesPage = () => {
     pvp: {
       currentRank: getCurrentRank(),
       totalBadges: calculateBadgeCount(userStats.achievements),
-      jsBadges: Object.entries(userStats.achievements?.codebattles || {}).filter(([key, value]) => key.startsWith('js') && value).length,
-      pythonBadges: Object.entries(userStats.achievements?.codebattles || {}).filter(([key, value]) => key.startsWith('python') && value).length
+      jsBadges: Object.entries(userStats.achievements?.codeBattles || {}).filter(([key, value]) => key.startsWith('js') && value).length,
+      pythonBadges: Object.entries(userStats.achievements?.codeBattles || {}).filter(([key, value]) => key.startsWith('python') && value).length
     },
     storyQuest: {
       currentChapter: `Chapter ${userStats.achievements?.storyQuest?.currentChapter || 0}: The Beginning`,
@@ -184,7 +360,7 @@ const GamesPage = () => {
         hover:border-white/40 transition-all duration-300 transform hover:scale-105 cursor-pointer
         ${isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-2xl'}
         retro-card pixel-shadow`}
-      onClick={!isLocked ? onClick : undefined}
+      onClick={!isLocked ? () => { onClick(); updateDailyStreak(); } : undefined}
     >
       {/* Floating pixels decoration */}
       <div className="absolute top-4 right-4 w-2 h-2 bg-white/60 floating-pixel" style={{animationDelay: '0s'}}></div>
@@ -256,6 +432,119 @@ const GamesPage = () => {
       <div className="pixel-font text-xs text-white/80">{label}</div>
     </div>
   );
+
+  // Daily Streak Component
+  const DailyStreakSection = () => {
+    const last7Days = getLast7Days();
+    const currentStreak = userStats.dailyStreak?.currentStreak || 0;
+    const longestStreak = userStats.dailyStreak?.longestStreak || 0;
+    const todayCompleted = last7Days.find(day => day.isToday)?.isActive || false;
+
+    return (
+      <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black p-8 rounded-none border-4 border-orange-400/50 retro-card">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <Flame className="w-8 h-8 text-orange-400" />
+            <h2 className="pixel-font text-2xl font-bold text-orange-400 glow-text">
+              DAILY STREAK
+            </h2>
+          </div>
+          <div className="text-right">
+            <div className="pixel-font text-lg font-bold text-white">
+              {currentStreak} DAY{currentStreak !== 1 ? 'S' : ''}
+            </div>
+            <div className="pixel-font text-xs text-gray-400">
+              Best: {longestStreak} days
+            </div>
+          </div>
+        </div>
+
+        {/* Today's Status */}
+        <div className="mb-6">
+          <div className={`flex items-center space-x-3 p-4 border-2 ${todayCompleted ? 'border-green-400 bg-green-900/30' : 'border-orange-400 bg-orange-900/30'}`}>
+            {todayCompleted ? (
+              <>
+                <CheckCircle className="w-6 h-6 text-green-400" />
+                <div>
+                  <div className="pixel-font text-sm font-bold text-green-400">TODAY COMPLETED!</div>
+                  <div className="pixel-font text-xs text-green-300">Great job! Your streak continues.</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <XCircle className="w-6 h-6 text-orange-400" />
+                <div>
+                  <div className="pixel-font text-sm font-bold text-orange-400">COMPLETE TODAY'S CHALLENGE</div>
+                  <div className="pixel-font text-xs text-orange-300">Play any game mode to maintain your streak!</div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* 7-Day Calendar */}
+        <div className="mb-6">
+          <div className="pixel-font text-sm font-bold text-white mb-3">LAST 7 DAYS</div>
+          <div className="grid grid-cols-7 gap-2">
+            {last7Days.map((day, index) => (
+              <div key={index} className="text-center">
+                <div className="pixel-font text-xs text-gray-400 mb-1">
+                  {day.dayName}
+                </div>
+                <div 
+                  className={`w-12 h-12 border-2 flex items-center justify-center ${
+                    day.isActive 
+                      ? 'border-green-400 bg-green-900/50 text-green-400' 
+                      : day.isToday 
+                        ? 'border-orange-400 bg-orange-900/50 text-orange-400'
+                        : 'border-gray-600 bg-gray-800/50 text-gray-500'
+                  }`}
+                >
+                  {day.isActive ? (
+                    <CheckCircle className="w-6 h-6" />
+                  ) : (
+                    <div className="pixel-font text-xs">{day.dayNumber}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Streak Milestones */}
+        <div>
+          <div className="pixel-font text-sm font-bold text-white mb-3">STREAK MILESTONES</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { days: 7, reward: 'Bronze Badge', achieved: currentStreak >= 7 },
+              { days: 14, reward: 'Silver Badge', achieved: currentStreak >= 14 },
+              { days: 30, reward: 'Gold Badge', achieved: currentStreak >= 30 },
+              { days: 100, reward: 'Legend Status', achieved: currentStreak >= 100 }
+            ].map((milestone, index) => (
+              <div 
+                key={index}
+                className={`p-3 border-2 text-center ${
+                  milestone.achieved 
+                    ? 'border-green-400 bg-green-900/30' 
+                    : 'border-gray-600 bg-gray-800/30'
+                }`}
+              >
+                <div className={`pixel-font text-sm font-bold ${milestone.achieved ? 'text-green-400' : 'text-gray-400'}`}>
+                  {milestone.days}
+                </div>
+                <div className={`pixel-font text-xs ${milestone.achieved ? 'text-green-300' : 'text-gray-500'}`}>
+                  {milestone.reward}
+                </div>
+                {milestone.achieved && (
+                  <CheckCircle className="w-4 h-4 text-green-400 mx-auto mt-1" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Show loading state
   if (loading) {
@@ -608,57 +897,8 @@ const GamesPage = () => {
           </div>
         )}
 
-        {/* Recent Activity */}
-        <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black p-8 rounded-none border-4 border-green-400/50 retro-card">
-          <h2 className="pixel-font text-2xl font-bold text-green-400 glow-text mb-6">
-            RECENT ACTIVITY
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-4">
-              <h3 className="pixel-font text-sm text-cyan-400">ACHIEVEMENTS</h3>
-              <div className="space-y-2">
-                {['Loop Master Badge Earned', 'Won 5 PvP Battles', 'Completed Chapter 2'].map((achievement, i) => (
-                  <div key={i} className="flex items-center space-x-2 text-sm">
-                    <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
-                    <span className="pixel-font text-xs text-gray-300">{achievement}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="pixel-font text-sm text-red-400">BATTLES</h3>
-              <div className="space-y-2">
-                {[
-                  { opponent: 'CodeNinja42', result: 'WIN', xp: '+50 XP' },
-                  { opponent: 'DevMaster', result: 'LOSS', xp: '+15 XP' },
-                  { opponent: 'ByteWarrior', result: 'WIN', xp: '+50 XP' }
-                ].map((battle, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="pixel-font text-gray-300">vs {battle.opponent}</span>
-                    <span className={`pixel-font font-bold ${battle.result === 'WIN' ? 'text-green-400' : 'text-red-400'}`}>
-                      {battle.result}
-                    </span>
-                    <span className="pixel-font text-yellow-400">{battle.xp}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="pixel-font text-sm text-purple-400">LEARNING</h3>
-              <div className="space-y-2">
-                {['Completed Array Methods', 'Started React Hooks', 'Practiced Algorithms'].map((activity, i) => (
-                  <div key={i} className="flex items-center space-x-2 text-sm">
-                    <Code className="w-4 h-4 text-purple-400" />
-                    <span className="pixel-font text-xs text-gray-300">{activity}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Daily Streak Section - Replaces Recent Activity */}
+        <DailyStreakSection />
 
         {/* Bottom decorative elements */}
         <div className="text-center mt-16">

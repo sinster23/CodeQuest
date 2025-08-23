@@ -44,7 +44,7 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
     return () => clearInterval(timer)
   }, [])
 
-  // Generate questions when component mounts or node changes
+  // Generate questions when componeant mounts or node changes
   useEffect(() => {
     if (node && language) {
       generateQuestions()
@@ -178,18 +178,19 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
   }, [code, currentQ, language, node?.id])
 
   const completeQuestion = useCallback(() => {
-    if (allTestsPassed) {
-      const newCompleted = new Set(completedQuestions)
-      newCompleted.add(currentQ.id)
-      setCompletedQuestions(newCompleted)
+  if (allTestsPassed) {
+    const newCompleted = new Set(completedQuestions)
+    newCompleted.add(currentQ.id)
+    setCompletedQuestions(newCompleted)
 
-      if (newCompleted.size === questions.length) {
-        setTimeout(() => {
-          onComplete(node.id)
-        }, 1500)
-      }
+    if (newCompleted.size === questions.length) {
+      // All questions completed, trigger node completion
+      setTimeout(() => {
+        onComplete(node.id)
+      }, 1500)
     }
-  }, [allTestsPassed, completedQuestions, currentQ?.id, questions.length, onComplete, node?.id])
+  }
+}, [allTestsPassed, completedQuestions, currentQ?.id, questions.length, onComplete, node?.id])
 
   const nextQuestion = useCallback(() => {
     if (currentQuestion < questions.length - 1) {
@@ -293,13 +294,17 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
             <div className="bg-black/50 p-2 rounded border border-purple-400/30">
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm text-white">{formatTime(timeSpent)}</span>
+                <span className="text-sm text-white">
+                  {formatTime(timeSpent)}
+                </span>
               </div>
             </div>
             <div className="bg-black/50 p-2 rounded border border-green-400/30">
               <div className="flex items-center space-x-2">
                 <Trophy className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm text-white">{getProgressPercentage()}%</span>
+                <span className="text-sm text-white">
+                  {getProgressPercentage()}%
+                </span>
               </div>
             </div>
           </div>
@@ -326,19 +331,31 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
           <div className="lg:col-span-1">
             <div className="bg-gray-800/50 border border-gray-600 p-6 mb-6 rounded">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-cyan-400">{currentQ.title}</h2>
+                <h2 className="text-lg font-bold text-cyan-400">
+                  {currentQ.title}
+                </h2>
                 <div className="flex items-center space-x-1">
                   {[...Array(currentQ.difficulty || 1)].map((_, i) => (
-                    <Star key={i} className="w-3 h-3 text-yellow-400" fill="currentColor" />
+                    <Star
+                      key={i}
+                      className="w-3 h-3 text-yellow-400"
+                      fill="currentColor"
+                    />
                   ))}
                 </div>
               </div>
 
-              <p className="text-sm text-gray-300 leading-relaxed mb-4">{currentQ.description}</p>
+              <p className="text-sm text-gray-300 leading-relaxed mb-4">
+                {currentQ.description}
+              </p>
 
               <div className="bg-gray-800/50 p-4 rounded border border-gray-600 mb-4">
-                <h3 className="text-sm text-yellow-400 mb-2 font-semibold">Task:</h3>
-                <p className="text-xs text-gray-300 leading-relaxed">{currentQ.prompt}</p>
+                <h3 className="text-sm text-yellow-400 mb-2 font-semibold">
+                  Task:
+                </h3>
+                <p className="text-xs text-gray-300 leading-relaxed">
+                  {currentQ.prompt}
+                </p>
               </div>
 
               <div className="flex space-x-2 mb-4">
@@ -359,10 +376,15 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
 
               {showHints && currentQ.hints && (
                 <div className="bg-yellow-900/30 p-4 rounded border border-yellow-600/30">
-                  <h3 className="text-sm text-yellow-400 mb-2 font-semibold">Hints:</h3>
+                  <h3 className="text-sm text-yellow-400 mb-2 font-semibold">
+                    Hints:
+                  </h3>
                   <ul className="space-y-1">
                     {currentQ.hints.map((hint, index) => (
-                      <li key={index} className="text-xs text-gray-300 flex items-start">
+                      <li
+                        key={index}
+                        className="text-xs text-gray-300 flex items-start"
+                      >
                         <span className="text-yellow-400 mr-2">•</span>
                         {hint}
                       </li>
@@ -384,11 +406,15 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                       completedQuestions.has(q.id)
                         ? "bg-green-600 text-white"
                         : index === currentQuestion
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                     }`}
                   >
-                    {completedQuestions.has(q.id) ? <Check className="w-3 h-3 mx-auto" /> : index + 1}
+                    {completedQuestions.has(q.id) ? (
+                      <Check className="w-3 h-3 mx-auto" />
+                    ) : (
+                      index + 1
+                    )}
                   </button>
                 ))}
               </div>
@@ -460,10 +486,13 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                 <div className="mt-4 bg-red-900/30 border border-red-600 p-4 rounded">
                   <div className="flex items-center mb-2">
                     <AlertCircle className="w-5 h-5 text-red-400 mr-2" />
-                    <h3 className="text-sm text-red-400 font-semibold">Connection Error</h3>
+                    <h3 className="text-sm text-red-400 font-semibold">
+                      Connection Error
+                    </h3>
                   </div>
                   <p className="text-sm text-gray-300">
-                    Cannot connect to the verification server. Please ensure the backend is running on port 5000.
+                    Cannot connect to the verification server. Please ensure the
+                    backend is running on port 5000.
                   </p>
                 </div>
               )}
@@ -471,14 +500,26 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
               {/* API Response Display */}
               {apiResponse && (
                 <div className="mt-4 bg-black p-4 rounded border border-gray-600">
-                  <h3 className="text-sm text-cyan-400 mb-2 font-semibold">Verification Result:</h3>
+                  <h3 className="text-sm text-cyan-400 mb-2 font-semibold">
+                    Verification Result:
+                  </h3>
                   {apiResponse.success ? (
                     <div>
-                      <div className={`text-sm mb-2 ${apiResponse.allPassed ? 'text-green-400' : 'text-yellow-400'}`}>
-                        {apiResponse.allPassed ? '✅ All tests passed!' : '⚠️ Some issues found'}
+                      <div
+                        className={`text-sm mb-2 ${
+                          apiResponse.allPassed
+                            ? "text-green-400"
+                            : "text-yellow-400"
+                        }`}
+                      >
+                        {apiResponse.allPassed
+                          ? "✅ All tests passed!"
+                          : "⚠️ Some issues found"}
                       </div>
                       {apiResponse.overallFeedback && (
-                        <p className="text-sm text-gray-300 whitespace-pre-wrap">{apiResponse.overallFeedback}</p>
+                        <p className="text-sm text-gray-300 whitespace-pre-wrap">
+                          {apiResponse.overallFeedback}
+                        </p>
                       )}
                     </div>
                   ) : (
@@ -509,7 +550,9 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-white font-medium">{result.description}</span>
+                        <span className="text-sm text-white font-medium">
+                          {result.description}
+                        </span>
                         {result.passed ? (
                           <CheckCircle className="w-5 h-5 text-green-400" />
                         ) : (
@@ -528,18 +571,23 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                 <div className="mt-4 p-4 bg-gray-800/50 rounded border border-gray-600">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-white">
-                      Tests Passed: {testResults.filter((r) => r.passed).length}/{testResults.length}
+                      Tests Passed: {testResults.filter((r) => r.passed).length}
+                      /{testResults.length}
                     </span>
                     <div className="flex items-center space-x-2">
                       {allTestsPassed ? (
                         <>
                           <CheckCircle className="w-5 h-5 text-green-400" />
-                          <span className="text-sm text-green-400 font-semibold">All Tests Passed!</span>
+                          <span className="text-sm text-green-400 font-semibold">
+                            All Tests Passed!
+                          </span>
                         </>
                       ) : (
                         <>
                           <XCircle className="w-5 h-5 text-red-400" />
-                          <span className="text-sm text-red-400 font-semibold">Some Tests Failed</span>
+                          <span className="text-sm text-red-400 font-semibold">
+                            Some Tests Failed
+                          </span>
                         </>
                       )}
                     </div>
@@ -566,9 +614,13 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
               <div className="bg-gradient-to-r from-green-600 to-teal-600 p-4 rounded border-2 border-green-400 text-center">
                 <div className="flex items-center justify-center mb-2">
                   <Award className="w-6 h-6 text-yellow-400 mr-2" />
-                  <span className="text-sm text-white font-bold">Node Completed!</span>
+                  <span className="text-sm text-white font-bold">
+                    Node Completed!
+                  </span>
                 </div>
-                <div className="text-xs text-gray-200">+{node?.xp || 100} XP earned</div>
+                <div className="text-xs text-gray-200">
+                  +{node?.xp || 100} XP earned
+                </div>
               </div>
             )}
           </div>
@@ -591,9 +643,12 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                 <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Trophy className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-yellow-400 mb-2">Congratulations!</h2>
+                <h2 className="text-2xl font-bold text-yellow-400 mb-2">
+                  Congratulations!
+                </h2>
                 <p className="text-sm text-gray-300">
-                  You've completed all challenges for {node?.name || "this section"}
+                  You've completed all challenges for{" "}
+                  {node?.name || "this section"}
                 </p>
               </div>
 
@@ -611,14 +666,14 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
                 className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-6 py-4 text-sm font-bold transform hover:scale-105 transition-all duration-300 flex items-center justify-center rounded"
               >
                 <Zap className="w-4 h-4 mr-2" />
-                Continue Journey
+                Back to Skills Path
               </button>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Demo component to test the ChallengePage

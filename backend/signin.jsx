@@ -78,133 +78,111 @@ const handleSignup = async (e) => {
 
     const user = userCredential.user;
 
-    // Add extra user details to Firestore
-    await setDoc(doc(db, "users", user.uid), {
-      username: userData.username || 'Anonymous',
-      email: userData.email || '',
-      createdAt: serverTimestamp(),
-      lastUpdated: serverTimestamp(),
-      
-      // General progression
-      level: 1,
-      xp: 0,
-      badges: 0,
-      rank: "Beginner",
-      
-      // Skills Path progress
-      skillsPath: {
-        javascript: { 
-          completedNodes: [], 
-          currentXP: 0,
-          lastPlayed: null
-        },
-        python: { 
-          completedNodes: [], 
-          currentXP: 0,
-          lastPlayed: null
-        },
-        html: { 
-          completedNodes: [], 
-          currentXP: 0,
-          lastPlayed: null
-        },
-        react: { 
-          completedNodes: [], 
-          currentXP: 0,
-          lastPlayed: null
-        },
-        algorithms: { 
-          completedNodes: [], 
-          currentXP: 0,
-          lastPlayed: null
-        },
-        databases: { 
-          completedNodes: [], 
-          currentXP: 0,
-          lastPlayed: null
-        }
-      },
-      
-      // Points Game achievements
-      pointsGame: {
-        totalPoints: 0,
-        highScore: 0,
-        gamesPlayed: 0,
-        goalsCompleted: [],
-        lastPlayed: null,
-        streak: 0,
-        bestStreak: 0,
-        achievements: {
-          firstGame: false,
-          scorer: false, // 100 points in single game
-          sharpshooter: false, // 500 points in single game
-          marathon: false, // 10 games played
-          dedicated: false, // 50 games played
-          champion: false, // 1000 total points
-          legend: false, // 5000 total points
-          streakMaster: false, // 5 game win streak
-          perfectionist: false // Complete all goals in a game
-        },
-        statistics: {
-          averageScore: 0,
-          totalTimePlayed: 0,
-          favoriteGameMode: null
-        }
-      },
-      
-      // Code Battles achievements  
-      codeBattles: {
-        // JavaScript badges
-        jsbadge1: false,
-        jsbadge2: false,
-        jsbadge3: false,
-        jsbadge4: false,
-        jsbadge5: false,
-        
-        // Python badges
-        pythonbadge1: false,
-        pythonbadge2: false,
-        pythonbadge3: false,
-        pythonbadge4: false,
-        pythonbadge5: false,
-        
-        // TypeScript badges
-        tsbadge1: false,
-        tsbadge2: false,
-        tsbadge3: false,
-        tsbadge4: false,
-        tsbadge5: false,
-        
-        // C++ badges
-        cppbadge1: false,
-        cppbadge2: false,
-        cppbadge3: false,
-        cppbadge4: false,
-        cppbadge5: false,
-        
-        // Java badges
-        javabadge1: false,
-        javabadge2: false,
-        javabadge3: false,
-        javabadge4: false,
-        javabadge5: false,
-        
-        // Overall stats
-        totalBattlesWon: 0,
-        totalBattlesPlayed: 0,
-        winRate: 0,
-        lastPlayed: null
-      },
-      
-      // Story Quest progress
-      storyQuest: {
-        currentChapter: 0,
-        completedChapters: [],
-        lastPlayed: null,
-        choicesMade: {},
-        unlockedFeatures: []
-      },
-    });
+// Replace the user document creation with this updated structure
+await setDoc(doc(db, "users", user.uid), {
+  username: formData.email || 'Anonymous',
+  email: formData.email || '',
+  createdAt: serverTimestamp(),
+  lastUpdated: serverTimestamp(),
+  
+  // General progression
+  level: 1,
+  xp: 0,
+  badges: 0,
+  rank: "Beginner",
+  
+  // Skills Path progress - FIXED STRUCTURE
+  skillsPath: {
+    javascript: { 
+      completedNodes: [], 
+      currentXP: 0, 
+      lastPlayed: null 
+    },
+    python: { 
+      completedNodes: [], 
+      currentXP: 0, 
+      lastPlayed: null 
+    },
+    html: { 
+      completedNodes: [], 
+      currentXP: 0, 
+      lastPlayed: null 
+    },
+    react: { 
+      completedNodes: [], 
+      currentXP: 0, 
+      lastPlayed: null 
+    },
+    algorithms: { 
+      completedNodes: [], 
+      currentXP: 0, 
+      lastPlayed: null 
+    },
+    databases: { 
+      completedNodes: [], 
+      currentXP: 0, 
+      lastPlayed: null 
+    }
+  },
+  
+  // Points Game achievements
+  pointsGame: {
+    totalPoints: 0,
+    highScore: 0,
+    gamesPlayed: 0,
+    goalsCompleted: [],
+    lastPlayed: null,
+    streak: 0,
+    bestStreak: 0,
+    achievements: {
+      firstGame: false,
+      scorer: false,
+      sharpshooter: false,
+      marathon: false,
+      dedicated: false,
+      champion: false,
+      legend: false,
+      streakMaster: false,
+      perfectionist: false
+    },
+    statistics: {
+      averageScore: 0,
+      totalTimePlayed: 0,
+      favoriteGameMode: null
+    }
+  },
+  
+  // Code Battles achievements
+  codeBattles: {
+    // JavaScript badges
+    jsbadge1: false, jsbadge2: false, jsbadge3: false, jsbadge4: false, jsbadge5: false,
+    // Python badges  
+    pythonbadge1: false, pythonbadge2: false, pythonbadge3: false, pythonbadge4: false, pythonbadge5: false,
+    // HTML/CSS badges
+    htmlbadge1: false, htmlbadge2: false, htmlbadge3: false, htmlbadge4: false, htmlbadge5: false,
+    // React badges
+    reactbadge1: false, reactbadge2: false, reactbadge3: false, reactbadge4: false, reactbadge5: false,
+    // Algorithm badges
+    algobadge1: false, algobadge2: false, algobadge3: false, algobadge4: false, algobadge5: false,
+    // Database badges
+    dbbadge1: false, dbbadge2: false, dbbadge3: false, dbbadge4: false, dbbadge5: false,
+    
+    // Overall stats
+    totalBattlesWon: 0,
+    totalBattlesPlayed: 0,
+    winRate: 0,
+    lastPlayed: null
+  },
+  
+  // Story Quest progress
+  storyQuest: {
+    currentChapter: 0,
+    completedChapters: [],
+    lastPlayed: null,
+    choicesMade: {},
+    unlockedFeatures: []
+  }
+});
 
     setSuccess("Signup successful!");
     showMessage(`Welcome, ${formData.username}! Entering the game world...`);

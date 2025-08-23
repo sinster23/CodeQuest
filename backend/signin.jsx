@@ -42,6 +42,12 @@ const PixelatedSignIn = () => {
     }));
   };
 
+  const handleAction = (action) => {
+    if (action === "login") {
+      navigate("/login"); // 👈 Navigate to login page
+    }
+  };
+
   // Show message function
   const showMessage = (msg, duration = 3000) => {
     setMessage(msg);
@@ -137,27 +143,27 @@ const handleSignup = async (e) => {
 };
 
   // Handle other actions
-  const handleAction = (action) => {
-    switch(action) {
-      case 'login':
-        showMessage('Switching to login...');
-        break;
-      case 'forgot':
-        showMessage('Password reset link sent to your email!');
-        break;
-      case 'privacy':
-        showMessage('Opening Privacy Policy...');
-        break;
-      case 'terms':
-        showMessage('Opening Terms of Service...');
-        break;
-      case 'support':
-        showMessage('Opening Support Center...');
-        break;
-      default:
-        break;
-    }
-  };
+  // const handleAction = (action) => {
+  //   switch(action) {
+  //     case 'login':
+  //       showMessage('Switching to login...');
+  //       break;
+  //     case 'forgot':
+  //       showMessage('Password reset link sent to your email!');
+  //       break;
+  //     case 'privacy':
+  //       showMessage('Opening Privacy Policy...');
+  //       break;
+  //     case 'terms':
+  //       showMessage('Opening Terms of Service...');
+  //       break;
+  //     case 'support':
+  //       showMessage('Opening Support Center...');
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
 
   // Generate pixel grid
   const generatePixelGrid = () => {

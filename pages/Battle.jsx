@@ -49,7 +49,7 @@ const CodeBattlesPage = () => {
   const [previousLevel, setPreviousLevel] = useState(null)
   const [newLevel, setNewLevel] = useState(null)
   // Add this near the top of your file, after imports
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://hackathon-backend-h3h6.onrender.com';
 
 // Add these new state variables with your existing ones
 const [questionsLoading, setQuestionsLoading] = useState(false);

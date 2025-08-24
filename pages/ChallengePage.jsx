@@ -56,7 +56,7 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
     setQuestionsError(null)
     
     try {
-      const response = await fetch('http://localhost:5000/api/generate-challenges', {
+      const response = await fetch('https://hackathon-backend-h3h6.onrender.com/api/generate-challenges', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ const ChallengePage = ({ node, onComplete, onBack, language }) => {
     setNetworkError(false)
 
     try {
-      const response = await fetch('http://localhost:5000/api/verify-code', {
+      const response = await fetch('https://hackathon-backend-h3h6.onrender.com/api/verify-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

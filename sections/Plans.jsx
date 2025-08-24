@@ -458,7 +458,7 @@ const SubscriptionSection = () => {
             </div>
 
             <div className="pixel-font text-xs text-gray-500">
-              {'>'} Made with {'<'} ♥ {'>'} for coders
+              {'>'} Made by {'<'} Fixers {'>'} for coders
             </div>
           </div>
         </div>

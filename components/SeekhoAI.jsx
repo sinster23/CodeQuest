@@ -60,7 +60,7 @@ export default function AIAssistantButton() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai-assistant', {
+      const response = await fetch('https://hackathon-backend-h3h6.onrender.com/api/ai-assistant', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
